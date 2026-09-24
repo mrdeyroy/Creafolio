@@ -1,0 +1,18 @@
+{
+  "name": "Creafolio",
+  "short_name": "Creafolio",
+  "description": "Minimalist portfolio references vault.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
