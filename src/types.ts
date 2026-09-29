@@ -1,5 +1,5 @@
 export interface PortfolioItem {
-  id: string;
+  id: string; // UUID from Supabase or unique ID
   url: string;
   title: string;
   domain: string;
@@ -9,5 +9,17 @@ export interface PortfolioItem {
   icon: string;
   tags: string[];
   pinned: boolean;
-  createdAt: number;
+  published: boolean;
+  createdAt?: number; // Epoch ms timestamp (used by local caches/fallback)
+  created_at?: string; // ISO 8601 string from Supabase
+  updated_at?: string; // ISO 8601 string from Supabase
+}
+
+export type ViewMode = "grid" | "compact";
+
+export interface MigrationSummary {
+  total: number;
+  added: number;
+  skipped: number;
+  errors: number;
 }
