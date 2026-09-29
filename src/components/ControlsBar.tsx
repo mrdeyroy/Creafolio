@@ -10,7 +10,7 @@ interface ControlsBarProps {
 
 const CATEGORIES = [
   { tag: "all", label: "All" },
-  { tag: "pinned", label: "Saved", icon: true },
+  { tag: "pinned", label: "Featured", icon: true },
   { tag: "Portfolios", label: "Portfolios" },
   { tag: "UI & Components", label: "UI & Components" },
   { tag: "Inspiration", label: "Inspiration" },

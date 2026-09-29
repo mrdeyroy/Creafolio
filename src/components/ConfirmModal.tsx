@@ -25,7 +25,7 @@ export function ConfirmModal({
   return (
     <div
       onClick={onCancel}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
     >
       <div
         onClick={(e) => e.stopPropagation()}

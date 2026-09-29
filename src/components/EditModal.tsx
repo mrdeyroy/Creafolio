@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PortfolioItem } from "@/types";
-import { X, RefreshCw, Loader2 } from "lucide-react";
+import { X, RefreshCw, Loader2, Bookmark, Eye } from "lucide-react";
 
 interface EditModalProps {
   isOpen: boolean;
@@ -28,6 +28,8 @@ export function EditModal({
   const [image, setImage] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
+  const [pinned, setPinned] = useState(false);
+  const [published, setPublished] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -38,6 +40,8 @@ export function EditModal({
       setImage(editingItem.image || "");
       setDescription(editingItem.description || "");
       setTags((editingItem.tags || []).join(", "));
+      setPinned(Boolean(editingItem.pinned));
+      setPublished(editingItem.published !== undefined ? Boolean(editingItem.published) : true);
     } else {
       setUrl("");
       setTitle("");
@@ -45,6 +49,8 @@ export function EditModal({
       setImage("");
       setDescription("");
       setTags("Portfolios");
+      setPinned(false);
+      setPublished(true);
     }
   }, [editingItem, isOpen]);
 
@@ -77,6 +83,8 @@ export function EditModal({
       image: image.trim(),
       description: description.trim(),
       tags: rawTags.length > 0 ? rawTags : [category],
+      pinned,
+      published,
     });
     onClose();
   };
@@ -84,7 +92,7 @@ export function EditModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -190,6 +198,35 @@ export function EditModal({
               placeholder="Minimal, 3D, Editorial"
               className="w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-1.5 text-zinc-100 outline-none focus:border-white/30"
             />
+          </div>
+
+          {/* Visibility and Featured flags */}
+          <div className="grid grid-cols-2 gap-2 rounded-lg border border-white/10 bg-zinc-950/60 p-2.5">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={published}
+                onChange={(e) => setPublished(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-white/20 bg-zinc-900 text-white accent-white"
+              />
+              <span className="flex items-center gap-1 text-zinc-300">
+                <Eye className="h-3 w-3 text-emerald-400" />
+                <span>Published (Public)</span>
+              </span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={pinned}
+                onChange={(e) => setPinned(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-white/20 bg-zinc-900 text-white accent-amber-400"
+              />
+              <span className="flex items-center gap-1 text-zinc-300">
+                <Bookmark className="h-3 w-3 text-amber-400" />
+                <span>Featured / Pinned</span>
+              </span>
+            </label>
           </div>
 
           <div className="mt-2 flex justify-end gap-2 border-t border-white/10 pt-3">

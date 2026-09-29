@@ -9,20 +9,26 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface PortfolioListItemProps {
   item: PortfolioItem;
-  onTogglePin: (id: string) => void;
-  onOpenEdit: (item: PortfolioItem) => void;
+  isAdmin?: boolean;
+  onTogglePin?: (id: string) => void;
+  onTogglePublish?: (id: string) => void;
+  onOpenEdit?: (item: PortfolioItem) => void;
   onCopyUrl: (url: string) => void;
-  onDelete: (item: PortfolioItem) => void;
+  onDelete?: (item: PortfolioItem) => void;
   onFilterByTag: (tag: string) => void;
 }
 
 export function PortfolioListItem({
   item,
+  isAdmin = false,
   onTogglePin,
+  onTogglePublish,
   onOpenEdit,
   onCopyUrl,
   onDelete,
@@ -40,7 +46,7 @@ export function PortfolioListItem({
         item.pinned
           ? "border-amber-500/30 bg-zinc-900/80 shadow-sm"
           : "border-white/[0.08] bg-zinc-900/40 hover:border-white/20 hover:bg-zinc-900/70"
-      }`}
+      } ${!item.published && isAdmin ? "opacity-75 ring-1 ring-amber-500/30" : ""}`}
     >
       {/* Main Row */}
       <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4">
@@ -76,7 +82,13 @@ export function PortfolioListItem({
               {item.pinned && (
                 <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400 border border-amber-500/20">
                   <Bookmark className="h-2.5 w-2.5 fill-current" />
-                  <span>Saved</span>
+                  <span>Featured</span>
+                </span>
+              )}
+              {isAdmin && !item.published && (
+                <span className="inline-flex items-center gap-1 rounded bg-amber-950/80 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300 border border-amber-500/30">
+                  <EyeOff className="h-2.5 w-2.5" />
+                  <span>Draft</span>
                 </span>
               )}
             </div>
@@ -101,61 +113,83 @@ export function PortfolioListItem({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => onTogglePin(item.id)}
-              title={item.pinned ? "Remove bookmark" : "Save bookmark"}
-              className={`rounded-lg p-1.5 transition ${
-                item.pinned
-                  ? "text-amber-400 hover:bg-amber-400/10"
-                  : "text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
-              }`}
-            >
-              <Bookmark className={`h-4 w-4 ${item.pinned ? "fill-current" : ""}`} />
-            </button>
+            {isAdmin ? (
+              <>
+                {onTogglePin && (
+                  <button
+                    type="button"
+                    onClick={() => onTogglePin(item.id)}
+                    title={item.pinned ? "Unpin featured" : "Pin as featured"}
+                    className={`rounded-lg p-1.5 transition ${
+                      item.pinned
+                        ? "text-amber-400 hover:bg-amber-400/10"
+                        : "text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Bookmark className={`h-4 w-4 ${item.pinned ? "fill-current" : ""}`} />
+                  </button>
+                )}
 
-            <button
-              type="button"
-              onClick={() => onCopyUrl(item.url)}
-              title="Copy URL"
-              className="hidden sm:flex rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
+                {onTogglePublish && (
+                  <button
+                    type="button"
+                    onClick={() => onTogglePublish(item.id)}
+                    title={item.published ? "Set as Draft" : "Publish to Live"}
+                    className={`rounded-lg p-1.5 transition hover:bg-white/10 ${
+                      item.published ? "text-emerald-400" : "text-amber-400"
+                    }`}
+                  >
+                    {item.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </button>
+                )}
 
-            <button
-              type="button"
-              onClick={() => onOpenEdit(item)}
-              title="Edit reference"
-              className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
+                <button
+                  type="button"
+                  onClick={() => onCopyUrl(item.url)}
+                  title="Copy URL"
+                  className="hidden sm:flex rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
 
-            <button
-              type="button"
-              onClick={() => onDelete(item)}
-              title="Delete"
-              className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-red-500/10 hover:text-red-400"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+                {onOpenEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenEdit(item)}
+                    title="Edit reference"
+                    className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                )}
 
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Visit site"
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/80 text-zinc-200 transition hover:bg-white hover:text-zinc-950"
-            >
-              <ArrowUpRight className="h-4 w-4" />
-            </a>
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(item)}
+                    title="Delete"
+                    className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-red-500/10 hover:text-red-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onCopyUrl(item.url)}
+                title="Copy URL"
+                className="hidden sm:flex rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+              >
+                <Copy className="h-4 w-4" />
+              </button>
+            )}
 
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               title={isExpanded ? "Collapse preview" : "Expand preview"}
-              className="rounded-lg p-1.5 text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+              className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
             >
               {isExpanded ? (
                 <ChevronUp className="h-4 w-4" />
@@ -167,36 +201,68 @@ export function PortfolioListItem({
         </div>
       </div>
 
-      {/* Expandable Preview Dropdown */}
+      {/* Expanded Accordion Tray */}
       {isExpanded && (
-        <div className="border-t border-white/[0.08] bg-zinc-950/60 p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start rounded-b-xl">
-          <div className="aspect-video w-full sm:w-56 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
-            <img
-              src={item.image || fallbackImg}
-              alt={item.title}
-              loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = fallbackImg;
-              }}
-              className="h-full w-full object-cover object-top"
-            />
-          </div>
-          <div className="flex flex-1 flex-col gap-2 min-w-0">
-            <div className="text-xs font-semibold text-zinc-300">About & Tags</div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              {item.description || "No description provided."}
-            </p>
-            <div className="flex flex-wrap gap-1.5 pt-2">
-              {(item.tags || []).map((t, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => onFilterByTag(t)}
-                  className="rounded-md bg-zinc-800 px-2 py-0.5 text-[11px] font-mono text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
+        <div className="border-t border-white/[0.06] bg-zinc-950/60 p-4 transition-all">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Thumbnail Preview */}
+            <div className="relative aspect-video w-full md:w-64 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
+              <img
+                src={item.image || fallbackImg}
+                alt={item.title}
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = fallbackImg;
+                }}
+                className="h-full w-full object-cover object-top"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-zinc-950 shadow hover:scale-105"
                 >
-                  {t}
-                </button>
-              ))}
+                  <span>Visit site</span>
+                  <ArrowUpRight className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+
+            {/* Expanded Details */}
+            <div className="flex flex-1 flex-col justify-between gap-3">
+              <div>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  {item.description || "No full description provided."}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(item.tags || []).map((t, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => onFilterByTag(t)}
+                      className="rounded bg-zinc-800/80 px-2 py-0.5 text-xs font-mono text-zinc-300 hover:bg-zinc-700 transition"
+                    >
+                      #{t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
+                <span className="text-xs text-zinc-500 font-mono">
+                  {item.domain}
+                </span>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-zinc-300 hover:text-white"
+                >
+                  <span>Open URL</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
