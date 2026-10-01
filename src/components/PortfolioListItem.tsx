@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { PortfolioItem } from "@/types";
 import {
   Bookmark,
@@ -11,11 +11,16 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  Sparkles,
+  Video,
 } from "lucide-react";
+import { getSafeExternalUrl } from "@/lib/url-security";
 
 interface PortfolioListItemProps {
   item: PortfolioItem;
   isAdmin?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: string) => void;
   onTogglePin?: (id: string) => void;
   onTogglePublish?: (id: string) => void;
   onOpenEdit?: (item: PortfolioItem) => void;
@@ -27,6 +32,8 @@ interface PortfolioListItemProps {
 export function PortfolioListItem({
   item,
   isAdmin = false,
+  isFavorite = false,
+  onToggleFavorite,
   onTogglePin,
   onTogglePublish,
   onOpenEdit,
@@ -35,6 +42,16 @@ export function PortfolioListItem({
   onFilterByTag,
 }: PortfolioListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isVideoHovered, setIsVideoHovered] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const hasVideo =
+    Boolean(item.video?.trim()) &&
+    (item.previewType === "video" || (!item.previewType && Boolean(item.video))) &&
+    !hasVideoError;
+
   const faviconUrl =
     item.icon ||
     `https://unavatar.io/${item.domain}?fallback=https://icons.duckduckgo.com/ip3/${item.domain}.ico`;
@@ -72,7 +89,7 @@ export function PortfolioListItem({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <a
-                href={item.url}
+                href={getSafeExternalUrl(item.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="truncate text-sm sm:text-base font-semibold text-zinc-100 transition hover:text-white"
@@ -81,7 +98,7 @@ export function PortfolioListItem({
               </a>
               {item.pinned && (
                 <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400 border border-amber-500/20">
-                  <Bookmark className="h-2.5 w-2.5 fill-current" />
+                  <Sparkles className="h-2.5 w-2.5 fill-current" />
                   <span>Featured</span>
                 </span>
               )}
@@ -101,11 +118,27 @@ export function PortfolioListItem({
 
         {/* Right: Meta & Actions */}
         <div className="flex items-center gap-3 shrink-0">
-          {/* Category / Domain Badge */}
-          <div className="hidden sm:flex flex-col items-end text-right">
-            <span className="text-xs font-medium text-zinc-300">
-              {item.category || "Portfolios"}
-            </span>
+          {/* Collections / Domain Badge */}
+          <div className="hidden sm:flex flex-col items-end text-right gap-1 max-w-[220px]">
+            <div className="flex flex-wrap justify-end gap-1">
+              {(item.collections && item.collections.length > 0
+                ? item.collections
+                : [{ id: "def", name: "Portfolios", slug: "portfolios" }]
+              ).map((c) => (
+                <button
+                  key={c.id || c.slug}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFilterByTag?.(c.slug || c.name);
+                  }}
+                  title={`Filter by collection: ${c.name}`}
+                  className="rounded bg-zinc-800/80 px-2 py-0.5 text-[11px] font-medium text-zinc-300 border border-white/10 hover:border-white/25 hover:text-white transition"
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
             <span className="text-[11px] font-mono text-zinc-500">
               {item.domain}
             </span>
@@ -175,14 +208,31 @@ export function PortfolioListItem({
                 )}
               </>
             ) : (
-              <button
-                type="button"
-                onClick={() => onCopyUrl(item.url)}
-                title="Copy URL"
-                className="hidden sm:flex rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
-              >
-                <Copy className="h-4 w-4" />
-              </button>
+              <>
+                {onToggleFavorite && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleFavorite(item.id)}
+                    title={isFavorite ? "Remove from saved bookmarks" : "Save to bookmarks"}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                      isFavorite
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30"
+                        : "border border-white/10 bg-zinc-900/60 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Bookmark className={`h-3.5 w-3.5 ${isFavorite ? "fill-current text-amber-400" : ""}`} />
+                    <span className="hidden sm:inline">{isFavorite ? "Saved" : "Save"}</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onCopyUrl(item.url)}
+                  title="Copy URL"
+                  className="hidden sm:flex rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </>
             )}
 
             <button
@@ -206,7 +256,32 @@ export function PortfolioListItem({
         <div className="border-t border-white/[0.06] bg-zinc-950/60 p-4 transition-all">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Thumbnail Preview */}
-            <div className="relative aspect-video w-full md:w-64 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
+            <div
+              onMouseEnter={() => {
+                setIsVideoHovered(true);
+                if (hasVideo && videoRef.current) {
+                  videoRef.current.play().catch(() => {});
+                }
+              }}
+              onMouseLeave={() => {
+                setIsVideoHovered(false);
+                if (hasVideo && videoRef.current) {
+                  videoRef.current.pause();
+                }
+              }}
+              className="relative aspect-video w-full md:w-64 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black"
+            >
+              {hasVideo && (
+                <span
+                  className={`absolute left-2 bottom-2 z-10 inline-flex items-center gap-1 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 backdrop-blur-md border border-white/10 transition-opacity duration-200 ${
+                    isVideoHovered ? "opacity-30" : "opacity-90"
+                  }`}
+                >
+                  <Video className="h-2.5 w-2.5 text-amber-400" />
+                  <span>Video</span>
+                </span>
+              )}
+
               <img
                 src={item.image || fallbackImg}
                 alt={item.title}
@@ -216,9 +291,30 @@ export function PortfolioListItem({
                 }}
                 className="h-full w-full object-cover object-top"
               />
+
+              {hasVideo && (
+                <video
+                  ref={videoRef}
+                  src={item.video!}
+                  poster={item.image || fallbackImg}
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  onLoadedData={() => setIsVideoLoaded(true)}
+                  onError={() => {
+                    setHasVideoError(true);
+                    setIsVideoHovered(false);
+                  }}
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 pointer-events-none ${
+                    isVideoHovered && isVideoLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              )}
+
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
                 <a
-                  href={item.url}
+                  href={getSafeExternalUrl(item.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-zinc-950 shadow hover:scale-105"

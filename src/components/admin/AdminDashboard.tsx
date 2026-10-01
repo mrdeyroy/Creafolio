@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { PortfolioItem, ViewMode } from "@/types";
+import { PortfolioItem, Collection, ViewMode } from "@/types";
 import { PortfolioCard } from "@/components/PortfolioCard";
 import { PortfolioListItem } from "@/components/PortfolioListItem";
 import { Omnibar } from "@/components/Omnibar";
 import { DataMigrationModal } from "./DataMigrationModal";
+import { ManageCollectionsModal } from "./ManageCollectionsModal";
 import {
   createPortfolio,
-  updatePortfolio,
-  deletePortfolio,
   togglePin,
   togglePublish,
 } from "@/lib/portfolio-service";
+import { validateAndSanitizeUrl } from "@/lib/url-security";
 import {
   ArrowLeft,
   LogOut,
@@ -25,13 +25,15 @@ import {
   Bookmark,
   Layers,
   Inbox,
-  Sparkles,
+  FolderKanban,
 } from "lucide-react";
 
 interface AdminDashboardProps {
   adminEmail: string;
   items: PortfolioItem[];
+  collections: Collection[];
   onRefreshData: () => Promise<void>;
+  onRefreshCollections: () => Promise<void>;
   onSignOut: () => void;
   onBackToPublic: () => void;
   onOpenEdit: (item: PortfolioItem | null) => void;
@@ -41,14 +43,18 @@ interface AdminDashboardProps {
     title: string;
     description: string;
     image: string;
-    category: string;
+    video?: string;
+    category?: string;
+    guessedCollections?: string[];
   }>;
 }
 
 export function AdminDashboard({
   adminEmail,
   items,
+  collections,
   onRefreshData,
+  onRefreshCollections,
   onSignOut,
   onBackToPublic,
   onOpenEdit,
@@ -57,9 +63,10 @@ export function AdminDashboard({
   fetchMetadata,
 }: AdminDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string>("all"); // 'all' | 'published' | 'drafts' | 'pinned' | category
+  const [activeFilter, setActiveFilter] = useState<string>("all"); // 'all' | 'published' | 'drafts' | 'pinned' | collection.slug
   const [viewMode, setViewMode] = useState<ViewMode>("compact");
   const [isMigrationOpen, setIsMigrationOpen] = useState(false);
+  const [isManageCollectionsOpen, setIsManageCollectionsOpen] = useState(false);
 
   // Compute metrics
   const totalCount = items.length;
@@ -69,17 +76,59 @@ export function AdminDashboard({
 
   // Add via Omnibar in Admin view
   const handleAddViaOmnibar = async (url: string) => {
+    const validated = validateAndSanitizeUrl(url);
+    if (!validated.isValid || !validated.sanitizedUrl) {
+      onShowToast(validated.error || "Please enter a valid website address.");
+      return;
+    }
+
+    const cleanUrl = validated.sanitizedUrl;
+    const isDuplicate = items.some(
+      (item) => item.url.toLowerCase().replace(/\/+$/, "") === cleanUrl.toLowerCase().replace(/\/+$/, "")
+    );
+    if (isDuplicate) {
+      onShowToast("This resource URL has already been added to Creafolio.");
+      return;
+    }
+
     try {
-      const meta = await fetchMetadata(url);
-      await createPortfolio({
-        url,
-        title: meta.title,
-        description: meta.description,
-        image: meta.image,
-        category: meta.category,
-        published: true,
-        pinned: false,
-      });
+      const meta = await fetchMetadata(cleanUrl);
+      let targetCollectionIds: string[] = [];
+
+      const toMatch = meta.guessedCollections && meta.guessedCollections.length > 0
+        ? meta.guessedCollections
+        : meta.category
+        ? [meta.category]
+        : [];
+
+      for (const name of toMatch) {
+        const match = collections.find(
+          (c) =>
+            c.name.toLowerCase() === name.toLowerCase() ||
+            c.slug.toLowerCase() === name.toLowerCase()
+        );
+        if (match && !targetCollectionIds.includes(match.id)) {
+          targetCollectionIds.push(match.id);
+        }
+      }
+
+      if (targetCollectionIds.length === 0 && collections.length > 0) {
+        targetCollectionIds = [collections[0].id];
+      }
+
+      await createPortfolio(
+        {
+          url: cleanUrl,
+          title: meta.title,
+          description: meta.description,
+          image: meta.image,
+          video: meta.video || null,
+          previewType: meta.video ? "video" : "image",
+          published: true,
+          pinned: false,
+        },
+        targetCollectionIds
+      );
       await onRefreshData();
       onShowToast(`Added: ${meta.title}`);
     } catch (err: unknown) {
@@ -132,7 +181,13 @@ export function AdminDashboard({
       activeFilter !== "drafts" &&
       activeFilter !== "pinned"
     ) {
-      if (item.category.toLowerCase() !== activeFilter.toLowerCase()) return false;
+      const target = activeFilter.toLowerCase();
+      const match = (item.collections || []).some(
+        (c) =>
+          c.slug.toLowerCase() === target ||
+          c.name.toLowerCase() === target
+      );
+      if (!match) return false;
     }
 
     if (searchQuery.trim()) {
@@ -141,7 +196,10 @@ export function AdminDashboard({
       const matchUrl = (item.url || "").toLowerCase().includes(q);
       const matchDesc = (item.description || "").toLowerCase().includes(q);
       const matchTag = (item.tags || []).some((t) => t.toLowerCase().includes(q));
-      if (!matchTitle && !matchUrl && !matchDesc && !matchTag) return false;
+      const matchCol = (item.collections || []).some((c) =>
+        c.name.toLowerCase().includes(q)
+      );
+      if (!matchTitle && !matchUrl && !matchDesc && !matchTag && !matchCol) return false;
     }
     return true;
   });
@@ -170,6 +228,16 @@ export function AdminDashboard({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Manage Collections Button */}
+          <button
+            type="button"
+            onClick={() => setIsManageCollectionsOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-300 transition hover:bg-amber-500/20"
+          >
+            <FolderKanban className="h-3.5 w-3.5" />
+            <span>Collections ({collections.length})</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsMigrationOpen(true)}
@@ -273,7 +341,7 @@ export function AdminDashboard({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search resources by title, URL, tag..."
+            placeholder="Search resources by title, URL, tag, collection..."
             autoComplete="off"
             spellCheck={false}
             className="min-w-0 flex-1 bg-transparent text-sm text-zinc-200 placeholder-zinc-500 outline-none"
@@ -289,17 +357,25 @@ export function AdminDashboard({
           )}
         </div>
 
-        {/* Filter Pills */}
+        {/* Filter Pills with Resource Counts */}
         <div className="flex flex-wrap items-center gap-1.5 select-none">
           {[
-            { id: "all", label: "All Resources" },
-            { id: "published", label: "Live Only" },
-            { id: "drafts", label: "Drafts Only" },
-            { id: "pinned", label: "Featured Only" },
-            { id: "Portfolios", label: "Portfolios" },
-            { id: "UI & Components", label: "UI & Components" },
-            { id: "Inspiration", label: "Inspiration" },
-            { id: "Tools & Resources", label: "Tools" },
+            { id: "all", label: "All Resources", count: totalCount },
+            { id: "published", label: "Live Only", count: publishedCount },
+            { id: "drafts", label: "Drafts Only", count: draftCount },
+            { id: "pinned", label: "Featured Only", count: pinnedCount },
+            ...collections.map((col) => ({
+              id: col.slug,
+              label: col.name,
+              count: items.filter((item) =>
+                (item.collections || []).some(
+                  (c) =>
+                    c.id === col.id ||
+                    c.slug.toLowerCase() === col.slug.toLowerCase() ||
+                    c.name.toLowerCase() === col.name.toLowerCase()
+                )
+              ).length,
+            })),
           ].map((pill) => {
             const active = activeFilter.toLowerCase() === pill.id.toLowerCase();
             return (
@@ -307,13 +383,20 @@ export function AdminDashboard({
                 key={pill.id}
                 type="button"
                 onClick={() => setActiveFilter(pill.id)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
                   active
                     ? "bg-zinc-100 text-zinc-950 font-semibold shadow-sm"
                     : "border border-white/10 bg-zinc-900/50 text-zinc-400 hover:border-white/20 hover:text-zinc-200"
                 }`}
               >
-                {pill.label}
+                <span>{pill.label}</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
+                    active ? "bg-zinc-950/20 text-zinc-950" : "bg-white/5 text-zinc-500"
+                  }`}
+                >
+                  {pill.count}
+                </span>
               </button>
             );
           })}
@@ -359,7 +442,7 @@ export function AdminDashboard({
           </div>
           <h3 className="text-sm font-semibold text-zinc-200">No resources found</h3>
           <p className="mt-1 text-xs text-zinc-500">
-            Add a URL above or adjust your search filter.
+            Add a URL above or adjust your search / collection filter.
           </p>
         </div>
       ) : viewMode === "compact" ? (
@@ -395,6 +478,17 @@ export function AdminDashboard({
           ))}
         </div>
       )}
+
+      {/* Manage Collections Modal */}
+      <ManageCollectionsModal
+        isOpen={isManageCollectionsOpen}
+        onClose={() => setIsManageCollectionsOpen(false)}
+        collections={collections}
+        items={items}
+        onRefreshCollections={onRefreshCollections}
+        onRefreshData={onRefreshData}
+        onShowToast={onShowToast}
+      />
 
       {/* Migration Modal */}
       <DataMigrationModal

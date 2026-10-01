@@ -1,0 +1,6 @@
+# Robots.txt for Creafolio
+User-agent: *
+Allow: /
+Disallow: /?admin=true
+
+Sitemap: https://creafolio.vercel.app/sitemap.xml

@@ -11,9 +11,9 @@ A clean, minimalist portfolio and design index built with **React 19, TypeScript
 - **Dual View Modes**: Switch between **Grid Cards** and **Experience-Style Row List** with thumbnail previews and quick action toolbars.
 - **Instant Metadata Scraper**: Paste any portfolio URL — automatically indexes the site's title, description, cover image, and favicon via Microlink and Unavatar.
 - **Zero Backend / Complete Privacy**: 100% client-side running purely in your browser using structured, deduplicated `localStorage`.
-- **Pin & Filter**: Bookmark favorites, filter by category (*Portfolios, UI & Components, Inspiration, Tools & Resources*), and search in real-time.
-- **Backup & Sync**: Export and import your collection as clean `.json` files or drag-and-drop backup files directly into the window.
-- **PWA & Mobile Ready**: Full offline capability and responsive layout with touch-draggable category filters.
+- **Pin & Filter**: Bookmark favorites, filter by Collections (*UI & Components, Landing Pages, Portfolios, Design Systems, Animations & Interactions, 3D & WebGL, AI Tools, Developer Tools, Fonts, Icons & Assets, Inspiration & Experiments*), and search in real-time.
+- **Backup & Sync**: Export and import your resources as clean `.json` files or drag-and-drop backup files directly into the window.
+- **PWA & Mobile Ready**: Full offline capability and responsive layout with touch-draggable collection filter pills.
 
 ---
 

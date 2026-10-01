@@ -14,8 +14,8 @@ export function BrandLogo({ count }: { count: number }) {
         </span>
         <span className="text-[15px] font-semibold tracking-tight text-white">Creafolio</span>
       </a>
-      <span className="h-1 w-1 rounded-full bg-zinc-600" />
-      <span className="font-mono text-xs text-zinc-500 whitespace-nowrap">{count} indexed</span>
+      <span className="hidden sm:inline-block h-1 w-1 rounded-full bg-zinc-600" />
+      <span className="hidden sm:inline-block font-mono text-xs text-zinc-500 whitespace-nowrap">{count} indexed</span>
     </div>
   );
 }

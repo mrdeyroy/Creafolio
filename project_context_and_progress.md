@@ -87,18 +87,33 @@ Creafolio/
 From [src/types.ts](file:///home/shibam/Documents/GitHub/Creafolio/src/types.ts):
 
 ```typescript
+export interface Collection {
+  id: string;          // UUID from Supabase or unique ID
+  name: string;        // Collection display name (e.g. 'UI & Components')
+  slug: string;        // URL/filter slug (e.g. 'ui-components')
+  description?: string;// Collection description
+  display_order?: number; // Ordering sequence
+  created_at?: string;
+  updated_at?: string;
+  count?: number;      // Computed resource count
+}
+
 export interface PortfolioItem {
-  id: string;          // Unique ID (e.g. 'seed-1' or generated 'pf-{timestamp}-{random}')
+  id: string;          // Unique ID (e.g. 'seed-1' or generated UUID)
   url: string;         // Normalized destination URL
   title: string;       // Web page title or extracted OpenGraph title
   domain: string;      // Parsed hostname (e.g. 'rauno.me')
-  category: string;    // 'Portfolios' | 'UI & Components' | 'Inspiration' | 'Tools & Resources'
+  collections: Collection[]; // Many-to-many collections
+  collection_ids?: string[]; // Array of collection UUIDs
   description: string; // Summary / OpenGraph description
   image: string;       // Screenshot / OG image (Microlink or thum.io fallback)
   icon: string;        // Favicon URL (unavatar.io or DuckDuckGo icons)
   tags: string[];      // Array of tags (e.g. ['React', '3D / WebGL'])
   pinned: boolean;     // Pin to top flag
-  createdAt: number;   // Timestamp (epoch ms)
+  published: boolean;  // Live publication status
+  createdAt?: number;  // Timestamp (epoch ms)
+  created_at?: string; // ISO 8601 string from Supabase
+  updated_at?: string; // ISO 8601 string from Supabase
 }
 ```
 
@@ -117,11 +132,22 @@ The repository has been successfully transitioned from an initial vanilla protot
 | `b75f19f` | Component suite & Modals | Added `PortfolioCard`, `EditModal`, `BackupModal`, `ConfirmModal`, and `Toast`. |
 | `1ca3d53` | List view & Cache deduplication | Implemented `PortfolioListItem` experience row view and sanitized `localStorage` deduplication engine in `App.tsx`. |
 | `1b05218` | Documentation update | Comprehensive update of `README.md` reflecting React 19 / Vite architecture. |
+| `current` | 10 Standard Collections System | Replaced old category/collection names with exactly 10 curated collections; safely remapped legacy categories and deprecated collections (e.g. Tools & Resources -> Developer Tools / AI Tools / Fonts, Icons & Assets) without data loss or duplication; updated Supabase schema & master migration script; updated Admin modal with alignment action. |
 
 ### Current State
-- **Git Tree**: Clean, branch `main` is completely synchronized with `origin/main`.
-- **Build**: Verified passing (`✓ built in 6.47s`, generating optimized production bundle in `dist/`).
-- **Seed Data**: 8 curated references populated out-of-the-box (21st.dev, Aceternity, Bruno Simon, Pavel Stetkevych, Magic UI, Siteinspire, Rauno Freiberg, Realtime Colors).
+- **Git Tree**: Clean, working directory verified.
+- **Build**: Verified passing (`✓ built in 6.93s`, generating optimized production bundle in `dist/`).
+- **Standard Collections (10)**: UI & Components, Landing Pages, Portfolios, Design Systems, Animations & Interactions, 3D & WebGL, AI Tools, Developer Tools, Fonts, Icons & Assets, Inspiration & Experiments.
+- **Seed Data**: 8 curated references populated out-of-the-box with multi-collection associations.
+- **Search & Filtering Engine**:
+  - Comprehensive instant search across title, domain, description, collections, tags, and URLs.
+  - Interactive Autocomplete suggestions popover with matching collections, tags, and resources.
+  - Multi-select Collections popover + multi-select pills with resource counts.
+  - Multi-select searchable Tags popover with occurrence counts.
+  - Multi-mode sorting: Default (Featured first), Recently Added, Alphabetical (A-Z), and Featured.
+  - Active filter badges strip with one-click dismiss (✕) and "Clear filters" action.
+  - Empty state with "Clear Filters" reset.
+  - Bidirectional URL state synchronization (`?q=...&collections=...&tags=...&sort=...`) for shareable filtered views.
 
 ---
 
@@ -129,28 +155,46 @@ The repository has been successfully transitioned from an initial vanilla protot
 
 > [!NOTE]
 > **Data Migration & Deduplication**:
-> [src/App.tsx](file:///home/shibam/Documents/GitHub/Creafolio/src/App.tsx#L128-L149) uses `deduplicateItems()` which checks both normalized URLs and IDs. When modifying how items are imported or appended, always route through `updatePortfolios()` to maintain cache integrity.
+> [src/App.tsx](file:///home/shibam/Documents/GitHub/Creafolio/src/App.tsx) maintains cache integrity and provides client-side filtering and sorting for instant reactivity.
 
 > [!TIP]
 > **Metadata Scraping Fallbacks**:
-> When a user enters a URL in `Omnibar.tsx`, [fetchMetadata in App.tsx](file:///home/shibam/Documents/GitHub/Creafolio/src/App.tsx#L235-L284) queries `api.microlink.io`. If Microlink is rate-limited or fails, it falls back to `image.thum.io` for screenshots and `unavatar.io` / `duckduckgo` for icons.
+> When a user enters a URL in `Omnibar.tsx`, [fetchMetadata in App.tsx](file:///home/shibam/Documents/GitHub/Creafolio/src/App.tsx) queries `api.microlink.io`. If Microlink is rate-limited or fails, it falls back to `image.thum.io` for screenshots and `unavatar.io` / `duckduckgo` for icons.
 
 > [!IMPORTANT]
 > **Legacy Relic Files**:
-> The root `app.js` and `style.css` files are leftovers from the pre-Vite implementation. The active application is driven by `src/` and `index.html`. Any future refactoring can safely inspect or clean up these files if desired.
+> The root `app.js` and `style.css` files are leftovers from the pre-Vite implementation. The active application is driven by `src/` and `index.html`.
 
 ---
 
-## 7. Recommended Next Steps / Roadmap
+## 8. Smooth Video Previews System
+
+- **Optional Video Enhancement**: Resources can specify `video?: string | null` and `previewType?: 'image' | 'video'`.
+- **Safe Fallback**: Every card always keeps its static screenshot (`image`). If a video URL is invalid, fails to play, or errors, the card falls back instantly to the screenshot without visual disruption.
+- **Desktop Hover Playback**:
+  - `preload="metadata"`, `muted`, `loop`, `playsInline`.
+  - Video plays smoothly on card hover and automatically pauses on mouse leave.
+  - Cards scrolling out of the viewport are paused via `IntersectionObserver`.
+  - Layout stability: `aspect-video` container guarantees card dimensions never jump or shift.
+- **Accessibility & Mobile**:
+  - Automatically respects `prefers-reduced-motion: reduce`.
+  - Touch devices gracefully display the static poster screenshot.
+- **Admin Panel Control**:
+  - Preview Type toggle (`Image` vs `Video`).
+  - Text input for custom direct video/stream URLs.
+  - Inline "Test Video" player with status validation.
+- **Lightweight Scraper Ingestion**:
+  - `fetchMetadata` checks Microlink API's OpenGraph video output (`data.video?.url` or `data.video`) safely without blocking URL ingestion.
+- **Database Schema**:
+  - Updated `supabase/schema.sql` and created `supabase/migration_video_preview.sql`.
+
+## 9. Recommended Next Steps / Roadmap
 
 Incoming agents can build upon the following areas:
 
-1. **Tag Filtering System**:
-   - The UI currently filters by category pills and text search.
-   - An interactive tag cloud or multiselect filter for `item.tags` would enhance discovery for large collections.
-2. **Offline Screenshot Caching / Local Blobs**:
+1. **Offline Screenshot Caching / Local Blobs**:
    - Currently, images rely on remote URLs (`thum.io` / `microlink`). An option to upload custom local image covers (stored as data URIs/IndexedDB) would protect against remote broken links.
-3. **Test Coverage**:
+2. **Test Coverage**:
    - Add Vitest and React Testing Library setup for unit testing helper functions (`deduplicateItems`, `fetchMetadata`) and component rendering.
-4. **PWA Service Worker Registration**:
+3. **PWA Service Worker Registration**:
    - `manifest.json` is configured; registering an active service worker in `main.tsx` would make the app fully usable offline.
