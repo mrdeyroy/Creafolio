@@ -27,8 +27,6 @@ import { AdminLogin } from "@/components/admin/AdminLogin";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 
 import {
-  Sun,
-  Moon,
   Grid,
   List,
   Inbox,
@@ -39,7 +37,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-const THEME_KEY = "creafolio_theme_master";
 const FAVORITES_KEY = "creafolio_visitor_favorites";
 
 const getInitialUrlFilters = () => {
@@ -88,13 +85,16 @@ const getInitialUrlFilters = () => {
   }
 };
 
+const isAdminRoute = (path: string, hash: string): boolean => {
+  const cleanPath = path.toLowerCase().replace(/\/+$/, "");
+  return hash.toLowerCase().includes("admin") || cleanPath === "/admin";
+};
+
 export function App() {
   // Navigation / View route
   const [currentRoute, setCurrentRoute] = useState<"public" | "admin">(() => {
     if (typeof window !== "undefined") {
-      const hash = window.location.hash.toLowerCase();
-      const path = window.location.pathname.toLowerCase();
-      if (hash.includes("admin") || path === "/admin") {
+      if (isAdminRoute(window.location.pathname, window.location.hash)) {
         return "admin";
       }
     }
@@ -137,7 +137,6 @@ export function App() {
   const [sortBy, setSortBy] = useState<SortOption>(initialFilters.sortBy);
   const [showSavedOnly, setShowSavedOnly] = useState(initialFilters.saved);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [theme, setTheme] = useState("dark");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Filter handlers
@@ -214,9 +213,11 @@ export function App() {
     if (showSavedOnly) params.set("saved", "true");
 
     const queryStr = params.toString();
+    const cleanPath = window.location.pathname.toLowerCase().replace(/\/+$/, "");
+    const basePath = cleanPath === "/admin" ? "/" : window.location.pathname || "/";
     const newUrl = queryStr
-      ? `${window.location.pathname}?${queryStr}${window.location.hash}`
-      : `${window.location.pathname}${window.location.hash}`;
+      ? `${basePath}?${queryStr}${window.location.hash}`
+      : `${basePath}${window.location.hash}`;
 
     window.history.replaceState(null, "", newUrl);
   }, [
@@ -250,12 +251,10 @@ export function App() {
     setTimeout(() => setToastMessage(null), 2500);
   }, []);
 
-  // Sync route with URL hash & popstate
+  // Sync route with URL path, hash & popstate
   useEffect(() => {
     const handleLocationChange = () => {
-      const hash = window.location.hash.toLowerCase();
-      const path = window.location.pathname.toLowerCase();
-      if (hash.includes("admin") || path === "/admin") {
+      if (isAdminRoute(window.location.pathname, window.location.hash)) {
         setCurrentRoute("admin");
       } else {
         setCurrentRoute("public");
@@ -273,28 +272,25 @@ export function App() {
   const navigateTo = (route: "public" | "admin") => {
     setCurrentRoute(route);
     if (route === "admin") {
-      window.location.hash = "#admin";
+      const cleanPath = window.location.pathname.toLowerCase().replace(/\/+$/, "");
+      if (cleanPath !== "/admin") {
+        window.history.pushState(null, "", "/admin");
+      }
     } else {
-      if (window.location.hash.includes("admin")) {
+      if (window.location.hash.toLowerCase().includes("admin")) {
         window.location.hash = "";
+      }
+      const cleanPath = window.location.pathname.toLowerCase().replace(/\/+$/, "");
+      if (cleanPath === "/admin") {
+        window.history.pushState(null, "", "/" + (window.location.search || ""));
       }
     }
   };
 
-  // Initialize Theme
+  // Initialize Theme (Dark default)
   useEffect(() => {
-    const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
-    setTheme(savedTheme);
-    document.body.setAttribute("data-theme", savedTheme);
+    document.body.setAttribute("data-theme", "dark");
   }, []);
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.body.setAttribute("data-theme", next);
-    localStorage.setItem(THEME_KEY, next);
-    showToast(`Theme: ${next}`);
-  };
 
   // Supabase Auth listener
   useEffect(() => {
@@ -674,14 +670,6 @@ export function App() {
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title="Toggle theme (⌘D)"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-zinc-400 transition hover:border-white/10 hover:bg-zinc-800 hover:text-white"
-            >
-              {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </button>
 
             {/* Portal navigation pill */}
             {adminUser ? (
