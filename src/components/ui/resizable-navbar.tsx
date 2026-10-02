@@ -38,9 +38,15 @@ interface MobileNavProps {
 }
 
 export const Navbar = ({ children, className }: NavbarProps) => {
-  const [visible, setVisible] = useState<boolean>(false);
+  const { scrollY } = useScroll();
+  const [visible, setVisible] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.scrollY > 40;
+    }
+    return false;
+  });
 
-  useMotionValueEvent(useScroll().scrollY, "change", (latest) => {
+  useMotionValueEvent(scrollY, "change", (latest) => {
     if (latest > 40) {
       setVisible(true);
     } else {
@@ -65,6 +71,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
 export const NavBody = ({ children, className, visible }: NavBodyProps) => {
   return (
     <motion.div
+      initial={false}
       animate={{
         backdropFilter: visible ? "blur(20px)" : "blur(14px)",
         boxShadow: visible
@@ -81,6 +88,13 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
         type: "spring",
         stiffness: 260,
         damping: 30,
+      }}
+      style={{
+        width: visible ? "92%" : "100%",
+        maxWidth: visible ? "680px" : "1140px",
+        height: visible ? "3.25rem" : "3.75rem",
+        borderRadius: visible ? "9999px" : "0px",
+        marginTop: visible ? "10px" : "0px",
       }}
       className={cn(
         "pointer-events-auto relative z-50 mx-auto flex flex-row items-center justify-between border-white/[0.08] px-4 py-2 sm:px-6 transition-colors duration-200",

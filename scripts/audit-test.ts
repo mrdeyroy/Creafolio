@@ -98,6 +98,26 @@ for (const name of EXPECTED_COLLECTIONS) {
   assert(typeof name === "string" && name.length > 0, `Valid standard collection name: "${name}"`);
 }
 
+// 5. Route Resolution Tests
+console.log("\n5. Client-Side Route Resolution Tests:");
+const resolveRoute = (path: string, hash: string) => {
+  const cleanPath = path.toLowerCase().replace(/\/+$/, "");
+  if (hash.toLowerCase().includes("admin") || cleanPath === "/admin") {
+    return "admin";
+  }
+  if (cleanPath === "/explore" || cleanPath.startsWith("/explore/")) {
+    return "explore";
+  }
+  return "landing";
+};
+
+assert(resolveRoute("/", "") === "landing", "Root path maps to landing page");
+assert(resolveRoute("", "") === "landing", "Empty path maps to landing page");
+assert(resolveRoute("/explore", "") === "explore", "/explore path maps to library");
+assert(resolveRoute("/explore/", "") === "explore", "/explore/ with trailing slash maps to library");
+assert(resolveRoute("/admin", "") === "admin", "/admin maps to admin portal");
+assert(resolveRoute("/", "#admin") === "admin", "Admin hash maps to admin portal");
+
 // Summary
 console.log("\n=======================================================");
 console.log(`Results: ${passedTests} passed, ${failedTests} failed, ${totalTests} total.`);

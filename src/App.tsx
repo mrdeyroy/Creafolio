@@ -25,19 +25,24 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 import { Toast } from "@/components/Toast";
 import { AdminLogin } from "@/components/admin/AdminLogin";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { VaultSpinner } from "@/components/VaultSpinner";
+import { Pagination } from "@/components/Pagination";
+import { HeroHeader } from "@/components/HeroHeader";
+import { LandingPage } from "@/components/landing/LandingPage";
 
 import {
   Grid,
   List,
   Inbox,
   Shield,
-  Loader2,
   Lock,
   Bookmark,
   RotateCcw,
+  Compass,
 } from "lucide-react";
 
 const FAVORITES_KEY = "creafolio_visitor_favorites";
+const ITEMS_PER_PAGE = 12;
 
 const getInitialUrlFilters = () => {
   if (typeof window === "undefined") {
@@ -85,20 +90,26 @@ const getInitialUrlFilters = () => {
   }
 };
 
-const isAdminRoute = (path: string, hash: string): boolean => {
+export type Route = "landing" | "explore" | "admin";
+
+const getRouteFromUrl = (path: string, hash: string): Route => {
   const cleanPath = path.toLowerCase().replace(/\/+$/, "");
-  return hash.toLowerCase().includes("admin") || cleanPath === "/admin";
+  if (hash.toLowerCase().includes("admin") || cleanPath === "/admin") {
+    return "admin";
+  }
+  if (cleanPath === "/explore" || cleanPath.startsWith("/explore/")) {
+    return "explore";
+  }
+  return "landing";
 };
 
 export function App() {
   // Navigation / View route
-  const [currentRoute, setCurrentRoute] = useState<"public" | "admin">(() => {
+  const [currentRoute, setCurrentRoute] = useState<Route>(() => {
     if (typeof window !== "undefined") {
-      if (isAdminRoute(window.location.pathname, window.location.hash)) {
-        return "admin";
-      }
+      return getRouteFromUrl(window.location.pathname, window.location.hash);
     }
-    return "public";
+    return "landing";
   });
 
   // Auth state
@@ -106,7 +117,7 @@ export function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   // Data state
-  const [publicPortfolios, setPublicPortfolios] = useState<PortfolioItem[]>([]);
+  const [publicPortfolios, setPublicPortfolios] = useState<PortfolioItem[]>(DEFAULT_PORTFOLIOS);
   const [adminPortfolios, setAdminPortfolios] = useState<PortfolioItem[]>([]);
   const [collections, setCollections] = useState<Collection[]>(DEFAULT_COLLECTIONS);
   const [dataLoading, setDataLoading] = useState(true);
@@ -137,6 +148,7 @@ export function App() {
   const [sortBy, setSortBy] = useState<SortOption>(initialFilters.sortBy);
   const [showSavedOnly, setShowSavedOnly] = useState(initialFilters.saved);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [currentPage, setCurrentPage] = useState(1);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Filter handlers
@@ -199,10 +211,10 @@ export function App() {
     sortBy !== "default" ||
     showSavedOnly;
 
-  // Sync filter state with URL search params
+  // Sync filter state with URL search params when on explore route
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (currentRoute !== "public") return;
+    if (currentRoute !== "explore") return;
 
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("q", searchQuery.trim());
@@ -213,11 +225,7 @@ export function App() {
     if (showSavedOnly) params.set("saved", "true");
 
     const queryStr = params.toString();
-    const cleanPath = window.location.pathname.toLowerCase().replace(/\/+$/, "");
-    const basePath = cleanPath === "/admin" ? "/" : window.location.pathname || "/";
-    const newUrl = queryStr
-      ? `${basePath}?${queryStr}${window.location.hash}`
-      : `${basePath}${window.location.hash}`;
+    const newUrl = queryStr ? `/explore?${queryStr}` : `/explore`;
 
     window.history.replaceState(null, "", newUrl);
   }, [
@@ -254,10 +262,19 @@ export function App() {
   // Sync route with URL path, hash & popstate
   useEffect(() => {
     const handleLocationChange = () => {
-      if (isAdminRoute(window.location.pathname, window.location.hash)) {
-        setCurrentRoute("admin");
-      } else {
-        setCurrentRoute("public");
+      const nextRoute = getRouteFromUrl(
+        window.location.pathname,
+        window.location.hash
+      );
+      setCurrentRoute(nextRoute);
+
+      if (nextRoute === "explore") {
+        const urlFilters = getInitialUrlFilters();
+        setSearchQuery(urlFilters.q);
+        setSelectedCollections(urlFilters.collections);
+        setSelectedTags(urlFilters.tags);
+        setSortBy(urlFilters.sortBy);
+        setShowSavedOnly(urlFilters.saved);
       }
     };
 
@@ -269,23 +286,67 @@ export function App() {
     };
   }, []);
 
-  const navigateTo = (route: "public" | "admin") => {
-    setCurrentRoute(route);
-    if (route === "admin") {
-      const cleanPath = window.location.pathname.toLowerCase().replace(/\/+$/, "");
-      if (cleanPath !== "/admin") {
-        window.history.pushState(null, "", "/admin");
+  const navigateTo = useCallback(
+    (
+      route: Route,
+      params?: { collection?: string; tag?: string; saved?: boolean }
+    ) => {
+      setCurrentRoute(route);
+
+      if (route === "admin") {
+        const cleanPath = window.location.pathname.toLowerCase().replace(/\/+$/, "");
+        if (cleanPath !== "/admin") {
+          window.history.pushState(null, "", "/admin");
+        }
+      } else if (route === "explore") {
+        if (window.location.hash.toLowerCase().includes("admin")) {
+          window.location.hash = "";
+        }
+        if (params?.collection) {
+          setSelectedCollections([params.collection]);
+          setShowSavedOnly(false);
+          setCurrentPage(1);
+        }
+        if (params?.tag) {
+          setSelectedTags([params.tag]);
+          setShowSavedOnly(false);
+          setCurrentPage(1);
+        }
+        if (params?.saved !== undefined) {
+          setShowSavedOnly(params.saved);
+          setCurrentPage(1);
+        }
+
+        const urlParams = new URLSearchParams();
+        if (params?.collection) {
+          urlParams.set("collections", params.collection);
+        } else if (selectedCollections.length > 0 && !params?.saved) {
+          urlParams.set("collections", selectedCollections.join(","));
+        }
+        if (params?.tag) {
+          urlParams.set("tags", params.tag);
+        } else if (selectedTags.length > 0 && !params?.saved) {
+          urlParams.set("tags", selectedTags.join(","));
+        }
+        if (params?.saved) {
+          urlParams.set("saved", "true");
+        }
+
+        const queryStr = urlParams.toString();
+        const targetUrl = queryStr ? `/explore?${queryStr}` : "/explore";
+        window.history.pushState(null, "", targetUrl);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        // Landing route ("/")
+        if (window.location.hash.toLowerCase().includes("admin")) {
+          window.location.hash = "";
+        }
+        window.history.pushState(null, "", "/");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
-    } else {
-      if (window.location.hash.toLowerCase().includes("admin")) {
-        window.location.hash = "";
-      }
-      const cleanPath = window.location.pathname.toLowerCase().replace(/\/+$/, "");
-      if (cleanPath === "/admin") {
-        window.history.pushState(null, "", "/" + (window.location.search || ""));
-      }
-    }
-  };
+    },
+    [selectedCollections, selectedTags]
+  );
 
   // Initialize Theme (Dark default)
   useEffect(() => {
@@ -438,7 +499,7 @@ export function App() {
     }
     setAdminUser(null);
     showToast("Signed out of admin session");
-    navigateTo("public");
+    navigateTo("explore");
   };
 
   // Admin save item handler (supports collection associations)
@@ -623,60 +684,104 @@ export function App() {
     sortBy,
   ]);
 
+  // Reset pagination to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCollections, selectedTags, sortBy, showSavedOnly]);
+
+  const totalPages = Math.ceil(filteredPublicPortfolios.length / ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const paginatedPortfolios = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredPublicPortfolios.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredPublicPortfolios, currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setCurrentPage(newPage);
+    const element = document.getElementById("resources-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <KineticGrid globalColor="monochrome">
       {/* Resizable Floating Navbar */}
       <Navbar>
         <NavBody>
           <div
-            onClick={() => navigateTo("public")}
+            onClick={() => navigateTo("landing")}
             className="cursor-pointer transition hover:opacity-90"
           >
-            <BrandLogo count={publicPortfolios.length} />
+            <BrandLogo count={publicPortfolios.length} onClick={() => navigateTo("landing")} />
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Quick Saved Pill for Public Visitors */}
-            {currentRoute === "public" && (
-              <button
-                type="button"
-                onClick={handleToggleSaved}
-                title="View your saved bookmarks"
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
-                  showSavedOnly
-                    ? "bg-amber-400 text-zinc-950 font-semibold shadow-sm"
-                    : "border border-white/10 bg-zinc-900/60 text-zinc-300 hover:border-white/20 hover:text-white"
-                }`}
-              >
-                <Bookmark
-                  className={`h-3.5 w-3.5 ${
-                    favorites.length > 0 || showSavedOnly
-                      ? "fill-current text-amber-500"
-                      : ""
-                  }`}
-                />
-                <span className="hidden sm:inline">Saved</span>
-                {favorites.length > 0 && (
-                  <span
-                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-semibold ${
-                      showSavedOnly
-                        ? "bg-black/20 text-zinc-950"
-                        : "bg-white/10 text-amber-300"
-                    }`}
-                  >
-                    {favorites.length}
-                  </span>
-                )}
-              </button>
-            )}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Explore Link */}
+            <button
+              type="button"
+              onClick={() => navigateTo("explore")}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
+                currentRoute === "explore" && !showSavedOnly
+                  ? "bg-white text-zinc-950 font-semibold shadow-sm"
+                  : "border border-white/10 bg-zinc-900/60 text-zinc-300 hover:border-white/20 hover:text-white"
+              }`}
+            >
+              <Compass className="h-3.5 w-3.5" />
+              <span>Explore</span>
+            </button>
 
+            {/* Quick Saved Pill */}
+            <button
+              type="button"
+              onClick={() => {
+                if (currentRoute === "explore") {
+                  handleToggleSaved();
+                } else {
+                  navigateTo("explore", { saved: true });
+                }
+              }}
+              title="View your saved bookmarks"
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
+                currentRoute === "explore" && showSavedOnly
+                  ? "bg-amber-400 text-zinc-950 font-semibold shadow-sm"
+                  : "border border-white/10 bg-zinc-900/60 text-zinc-300 hover:border-white/20 hover:text-white"
+              }`}
+            >
+              <Bookmark
+                className={`h-3.5 w-3.5 ${
+                  favorites.length > 0 || (currentRoute === "explore" && showSavedOnly)
+                    ? "fill-current text-amber-500"
+                    : ""
+                }`}
+              />
+              <span className="hidden sm:inline">Saved</span>
+              {favorites.length > 0 && (
+                <span
+                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono font-semibold ${
+                    currentRoute === "explore" && showSavedOnly
+                      ? "bg-black/20 text-zinc-950"
+                      : "bg-white/10 text-amber-300"
+                  }`}
+                >
+                  {favorites.length}
+                </span>
+              )}
+            </button>
 
             {/* Portal navigation pill */}
             {adminUser ? (
               <button
                 type="button"
                 onClick={() =>
-                  navigateTo(currentRoute === "admin" ? "public" : "admin")
+                  navigateTo(currentRoute === "admin" ? "explore" : "admin")
                 }
                 className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/40"
               >
@@ -701,7 +806,7 @@ export function App() {
       {currentRoute === "admin" ? (
         authLoading ? (
           <div className="flex min-h-[60vh] items-center justify-center pt-24">
-            <Loader2 className="h-7 w-7 animate-spin text-zinc-500" />
+            <VaultSpinner label="Verifying session..." size="lg" />
           </div>
         ) : adminUser ? (
           <AdminDashboard
@@ -711,7 +816,7 @@ export function App() {
             onRefreshData={loadAdminData}
             onRefreshCollections={loadCollections}
             onSignOut={handleSignOut}
-            onBackToPublic={() => navigateTo("public")}
+            onBackToPublic={() => navigateTo("explore")}
             onOpenEdit={(item) => {
               setEditingItem(item);
               setIsEditOpen(true);
@@ -726,21 +831,23 @@ export function App() {
               setAdminUser({ email });
               showToast(`Welcome back, ${email}`);
             }}
-            onBackToPublic={() => navigateTo("public")}
+            onBackToPublic={() => navigateTo("explore")}
           />
         )
+      ) : currentRoute === "landing" ? (
+        <LandingPage
+          items={publicPortfolios}
+          collections={collections}
+          favorites={favorites}
+          onToggleFavorite={handleToggleFavorite}
+          onNavigate={(target, params) => navigateTo(target, params)}
+          onCopyUrl={handleCopyUrl}
+        />
       ) : (
-        /* Public Browsing Experience */
-        <main className="mx-auto w-full max-w-[1140px] px-4 pt-20 pb-20 sm:px-6">
+        /* Public Browsing Experience at /explore */
+        <main className="mx-auto w-full max-w-[1140px] px-4 pt-24 pb-24 sm:px-6">
           {/* Hero Header */}
-          <div className="mx-auto mb-8 max-w-2xl text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-              The Vibe Coder's Vault
-            </h1>
-            <p className="mt-2 text-xs sm:text-sm text-zinc-400">
-              A curated index of essential AI tools, creative engineering, UI libraries, and inspirations — built so you spend less time hunting for tools and more time building.
-            </p>
-          </div>
+          <HeroHeader />
 
           {/* Search & Collection Filter Controls */}
           <ControlsBar
@@ -762,6 +869,7 @@ export function App() {
             allPortfolios={publicPortfolios}
             onClearAllFilters={handleClearAllFilters}
             hasActiveFilters={hasActiveFilters}
+            filteredCount={filteredPublicPortfolios.length}
           />
 
           {/* Saved Collection Callout */}
@@ -793,7 +901,7 @@ export function App() {
           )}
 
           {/* Toolbar: Count & View Switcher */}
-          <div className="mb-4 flex items-center justify-between">
+          <div id="resources-section" className="mb-4 flex items-center justify-between scroll-mt-20">
             <span className="font-mono text-xs text-zinc-500">
               {filteredPublicPortfolios.length} reference
               {filteredPublicPortfolios.length === 1 ? "" : "s"}
@@ -828,8 +936,8 @@ export function App() {
 
           {/* Card Grid / List */}
           {dataLoading ? (
-            <div className="flex min-h-[30vh] items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            <div className="flex min-h-[35vh] items-center justify-center">
+              <VaultSpinner label="Loading vault references..." size="md" />
             </div>
           ) : filteredPublicPortfolios.length === 0 ? (
             showSavedOnly ? (
@@ -870,40 +978,60 @@ export function App() {
                 </button>
               </div>
             )
-          ) : viewMode === "compact" ? (
-            <div className="flex flex-col gap-2.5">
-              {filteredPublicPortfolios.map((item) => (
-                <PortfolioListItem
-                  key={item.id}
-                  item={item}
-                  isAdmin={false}
-                  isFavorite={favorites.includes(item.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  onCopyUrl={handleCopyUrl}
-                  onFilterByTag={handleToggleTag}
-                />
-              ))}
-            </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-              {filteredPublicPortfolios.map((item) => (
-                <PortfolioCard
-                  key={item.id}
-                  item={item}
-                  isAdmin={false}
-                  isFavorite={favorites.includes(item.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  onCopyUrl={handleCopyUrl}
-                  onFilterByTag={handleToggleTag}
-                />
-              ))}
-            </div>
+            <>
+              {viewMode === "compact" ? (
+                <div className="flex flex-col gap-2.5">
+                  {paginatedPortfolios.map((item) => (
+                    <PortfolioListItem
+                      key={item.id}
+                      item={item}
+                      isAdmin={false}
+                      isFavorite={favorites.includes(item.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                      onCopyUrl={handleCopyUrl}
+                      onFilterByTag={handleToggleTag}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+                  {paginatedPortfolios.map((item) => (
+                    <PortfolioCard
+                      key={item.id}
+                      item={item}
+                      isAdmin={false}
+                      isFavorite={favorites.includes(item.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                      onCopyUrl={handleCopyUrl}
+                      onFilterByTag={handleToggleTag}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Minimal Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredPublicPortfolios.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={handlePageChange}
+              />
+            </>
           )}
 
           {/* Public Footer */}
           <footer className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-zinc-500 sm:flex-row">
             <div>© {new Date().getFullYear()} Creafolio — All rights reserved.</div>
             <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => navigateTo("landing")}
+                className="text-zinc-500 hover:text-zinc-300 transition"
+              >
+                Home
+              </button>
               <button
                 type="button"
                 onClick={() => navigateTo("admin")}

@@ -1,9 +1,16 @@
 import React from "react";
 
-export function BrandLogo({ count }: { count: number }) {
+export function BrandLogo({ count, onClick }: { count: number; onClick?: () => void }) {
   return (
     <div className="flex items-center gap-2">
-      <a href="#" className="group inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-zinc-100 hover:opacity-95">
+      <a
+        href="/"
+        onClick={(e) => {
+          e.preventDefault();
+          onClick?.();
+        }}
+        className="group inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-zinc-100 hover:opacity-95"
+      >
         <span className="logo-mark relative flex h-[30px] w-[30px] items-center justify-center overflow-hidden rounded-md border border-white/10 bg-zinc-900 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:rotate-[-2deg] group-hover:border-white/30">
           <svg className="h-[17px] w-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect width="18" height="18" x="3" y="3" rx="4" />
