@@ -18,6 +18,7 @@ import {
   Code,
   Type,
   Compass,
+  GitBranch,
 } from "lucide-react";
 import { Collection, PortfolioItem } from "@/types";
 import { DEFAULT_COLLECTIONS } from "@/lib/portfolio-service";
@@ -61,8 +62,8 @@ export const getCollectionIcon = (slug: string) => {
       return <Globe className="h-4 w-4 text-cyan-400" />;
     case "portfolios":
       return <Folder className="h-4 w-4 text-amber-400" />;
-    case "design-systems":
-      return <Sparkles className="h-4 w-4 text-purple-400" />;
+    case "github-repos":
+      return <GitBranch className="h-4 w-4 text-purple-400" />;
     case "animations-interactions":
       return <Sparkles className="h-4 w-4 text-pink-400" />;
     case "3d-webgl":
@@ -436,7 +437,7 @@ export function ControlsBar({
             type="button"
             onClick={onToggleSaved}
             title="Show saved references"
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2 sm:px-3 py-1.5 text-xs font-medium transition ${
               showSavedOnly
                 ? "border-amber-500/40 bg-amber-500/10 text-amber-200 shadow-sm"
                 : "border-white/10 bg-zinc-900/60 text-zinc-300 hover:border-white/20 hover:text-white"
@@ -449,7 +450,7 @@ export function ControlsBar({
                   : "text-zinc-400"
               }`}
             />
-            <span>Saved</span>
+            <span className="hidden min-[340px]:inline">Saved</span>
             {savedCount > 0 && (
               <span
                 className={`ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-mono font-semibold transition ${

@@ -20,6 +20,7 @@ import {
   Type,
   Lightbulb,
   Globe,
+  GitBranch,
   SlidersHorizontal,
   Play,
   Pause,
@@ -53,8 +54,8 @@ const getCollectionIcon = (slug: string) => {
       return Globe;
     case "portfolios":
       return Compass;
-    case "design-systems":
-      return Palette;
+    case "github-repos":
+      return GitBranch;
     case "animations-interactions":
       return Film;
     case "3d-webgl":
@@ -205,6 +206,12 @@ export function LandingPage({
           className="pointer-events-none absolute -top-10 left-1/2 -z-10 h-72 w-full max-w-2xl -translate-x-1/2 rounded-full bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent blur-3xl"
         />
 
+        {/* Dark contrast pool behind hero text to maintain crisp legibility over kinetic grid */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-12 left-1/2 -z-10 h-80 w-full max-w-3xl -translate-x-1/2 rounded-full bg-black/60 blur-3xl"
+        />
+
         {/* Small Eyebrow */}
         <motion.div
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
@@ -225,7 +232,7 @@ export function LandingPage({
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.08 }}
-          className="mx-auto max-w-4xl text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.08]"
+          className="mx-auto max-w-4xl text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-[1.08] drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
         >
           Stop Searching.
           <br />
@@ -239,7 +246,7 @@ export function LandingPage({
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.16 }}
-          className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-zinc-400 leading-relaxed font-normal"
+          className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-zinc-300 leading-relaxed font-normal drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
         >
           AI tools, UI libraries, creative websites, developer resources and
           inspiration, collected in one place.
@@ -545,14 +552,19 @@ export function LandingPage({
       {/* ========================================================================= */}
       {/* 3. "WHY I BUILT THIS" SECTION */}
       {/* ========================================================================= */}
-      <section className="relative mb-28 border-y border-white/10 py-16 sm:py-24">
+      <section className="relative mb-28 overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-zinc-950/85 p-7 sm:p-12 md:p-14 shadow-2xl backdrop-blur-xl">
+        {/* Subtle decorative corner radial glow */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 -right-24 -z-10 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl"
+        />
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-2 font-mono text-xs text-emerald-400 mb-6">
             <span>//</span>
             <span className="uppercase tracking-wider">WHY I BUILT THIS</span>
           </div>
 
-          <div className="space-y-6 text-xl sm:text-2xl font-light text-zinc-300 leading-relaxed">
+          <div className="space-y-6 text-xl sm:text-2xl font-light text-zinc-200 leading-relaxed">
             <p>
               I kept finding interesting tools, websites and resources, then losing them again.
             </p>
@@ -565,7 +577,7 @@ export function LandingPage({
           </div>
 
           {/* Highlighted Quote Callout */}
-          <div className="mt-10 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-5 sm:p-6 backdrop-blur-sm">
+          <div className="mt-10 rounded-xl border border-emerald-500/20 bg-emerald-950/30 p-5 sm:p-6 backdrop-blur-sm">
             <div className="text-sm sm:text-base font-medium text-emerald-200">
               “Spend less time searching. More time building.”
             </div>
@@ -580,14 +592,18 @@ export function LandingPage({
       {/* 4. COLLECTIONS SECTION */}
       {/* ========================================================================= */}
       <section className="relative mb-28">
-        <div className="mb-8">
+        <div className="relative mb-8">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-x-4 -inset-y-3 -z-10 rounded-2xl bg-zinc-950/70 blur-xl"
+          />
           <div className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-emerald-400">
             <span>01 // DIRECTORY</span>
           </div>
-          <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white">
+          <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
             10 Curated Collections
           </h2>
-          <p className="mt-2 text-sm text-zinc-400 max-w-xl">
+          <p className="mt-2 text-sm text-zinc-300 max-w-xl">
             Each collection is hand-vetted and categorized for immediate reference. Click any collection to explore filtered resources.
           </p>
         </div>
@@ -641,14 +657,18 @@ export function LandingPage({
       {/* 5. DISCOVERY SECTION ("How it works") */}
       {/* ========================================================================= */}
       <section id="how-it-works" className="relative mb-28 scroll-mt-24">
-        <div className="mb-10 text-center">
+        <div className="relative mb-10 text-center">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-2xl rounded-full bg-black/70 blur-3xl"
+          />
           <div className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-emerald-400 mb-2">
             <span>02 // DISCOVERY</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white max-w-2xl mx-auto">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
             Find something interesting. Save it. Come back when you need it.
           </h2>
-          <p className="mt-3 text-sm text-zinc-400 max-w-xl mx-auto">
+          <p className="mt-3 text-sm text-zinc-300 max-w-xl mx-auto">
             Built without friction. No signups required, instant local saving, and quick-copy utilities.
           </p>
         </div>
@@ -656,7 +676,7 @@ export function LandingPage({
         {/* 4 Feature Pillars with Real UI Elements */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Pillar 1: Search */}
-          <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-5 flex flex-col justify-between backdrop-blur-md">
             <div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4">
                 <Search className="h-5 w-5" />
@@ -673,14 +693,14 @@ export function LandingPage({
           </div>
 
           {/* Pillar 2: Collections */}
-          <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-5 flex flex-col justify-between backdrop-blur-md">
             <div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mb-4">
                 <Layers className="h-5 w-5" />
               </div>
               <h3 className="font-semibold text-white text-base">Curated Taxonomies</h3>
               <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed">
-                Hand-vetted collections from WebGL shaders to production UI design systems.
+                Hand-vetted collections from WebGL shaders to open-source GitHub repositories.
               </p>
             </div>
             <div className="mt-6 flex flex-wrap gap-1">
@@ -694,7 +714,7 @@ export function LandingPage({
           </div>
 
           {/* Pillar 3: Granular Tags */}
-          <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-5 flex flex-col justify-between backdrop-blur-md">
             <div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-4">
                 <Terminal className="h-5 w-5" />
@@ -717,7 +737,7 @@ export function LandingPage({
           </div>
 
           {/* Pillar 4: Saved Resources */}
-          <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 flex flex-col justify-between">
+          <div className="rounded-2xl border border-white/10 bg-zinc-900/80 p-5 flex flex-col justify-between backdrop-blur-md">
             <div>
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-4">
                 <Bookmark className="h-5 w-5 fill-current" />

@@ -36,9 +36,9 @@ export const DEFAULT_COLLECTIONS: Collection[] = [
   },
   {
     id: "c1000000-0000-0000-0000-000000000004",
-    name: "Design Systems",
-    slug: "design-systems",
-    description: "Comprehensive design language and documentation systems.",
+    name: "GitHub Repos",
+    slug: "github-repos",
+    description: "Starred open-source repositories, developer tools, libraries, and boilerplates.",
     display_order: 4,
   },
   {
@@ -91,11 +91,11 @@ export const DEFAULT_PORTFOLIOS: PortfolioItem[] = [
     url: "https://21st.dev",
     title: "21st.dev — The NPM for Design Engineers",
     domain: "21st.dev",
-    collections: [DEFAULT_COLLECTIONS[0], DEFAULT_COLLECTIONS[7]], // UI & Components, Developer Tools
+    collections: [DEFAULT_COLLECTIONS[0]], // UI & Components
     description: "Open-source community component library with copy-paste Tailwind and React micro-interactions.",
     image: "https://image.thum.io/get/width/800/crop/600/https://21st.dev",
     icon: "https://unavatar.io/21st.dev?fallback=https://icons.duckduckgo.com/ip3/21st.dev.ico",
-    tags: ["UI Components", "Tailwind", "React"],
+    tags: ["UI Components", "Tailwind", "React", "Open Source"],
     pinned: true,
     published: true,
     createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7,
@@ -105,16 +105,11 @@ export const DEFAULT_PORTFOLIOS: PortfolioItem[] = [
     url: "https://ui.aceternity.com",
     title: "Aceternity UI",
     domain: "ui.aceternity.com",
-    collections: [
-      DEFAULT_COLLECTIONS[0],
-      DEFAULT_COLLECTIONS[1],
-      DEFAULT_COLLECTIONS[3],
-      DEFAULT_COLLECTIONS[4],
-    ], // UI & Components, Landing Pages, Design Systems, Animations & Interactions
+    collections: [DEFAULT_COLLECTIONS[0]], // UI & Components
     description: "Trending animated components built with Framer Motion and Tailwind CSS for modern landing pages.",
     image: "https://image.thum.io/get/width/800/crop/600/https://ui.aceternity.com",
     icon: "https://unavatar.io/ui.aceternity.com?fallback=https://icons.duckduckgo.com/ip3/ui.aceternity.com.ico",
-    tags: ["UI Components", "Framer Motion", "Animations"],
+    tags: ["UI Components", "Framer Motion", "Animations", "Tailwind"],
     pinned: true,
     published: true,
     createdAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
@@ -124,11 +119,7 @@ export const DEFAULT_PORTFOLIOS: PortfolioItem[] = [
     url: "https://bruno-simon.com",
     title: "Bruno Simon",
     domain: "bruno-simon.com",
-    collections: [
-      DEFAULT_COLLECTIONS[2],
-      DEFAULT_COLLECTIONS[5],
-      DEFAULT_COLLECTIONS[9],
-    ], // Portfolios, 3D & WebGL, Inspiration & Experiments
+    collections: [DEFAULT_COLLECTIONS[5]], // 3D & WebGL
     description: "Interactive 3D physics portfolio built with Three.js and custom vehicle simulation.",
     image: "https://image.thum.io/get/width/800/crop/600/https://bruno-simon.com",
     video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
@@ -158,15 +149,11 @@ export const DEFAULT_PORTFOLIOS: PortfolioItem[] = [
     url: "https://magicui.design",
     title: "Magic UI",
     domain: "magicui.design",
-    collections: [
-      DEFAULT_COLLECTIONS[0],
-      DEFAULT_COLLECTIONS[1],
-      DEFAULT_COLLECTIONS[4],
-    ], // UI & Components, Landing Pages, Animations & Interactions
-    description: "UI library for design engineers offering 50+ animated components for landing pages.",
+    collections: [DEFAULT_COLLECTIONS[3]], // GitHub Repos
+    description: "Open-source UI library for design engineers offering 50+ animated components for landing pages.",
     image: "https://image.thum.io/get/width/800/crop/600/https://magicui.design",
     icon: "https://unavatar.io/magicui.design?fallback=https://icons.duckduckgo.com/ip3/magicui.design.ico",
-    tags: ["UI Components", "React", "Motion"],
+    tags: ["UI Components", "React", "Motion", "Open Source"],
     pinned: false,
     published: true,
     createdAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
@@ -190,11 +177,7 @@ export const DEFAULT_PORTFOLIOS: PortfolioItem[] = [
     url: "https://rauno.me",
     title: "Rauno Freiberg",
     domain: "rauno.me",
-    collections: [
-      DEFAULT_COLLECTIONS[2],
-      DEFAULT_COLLECTIONS[3],
-      DEFAULT_COLLECTIONS[4],
-    ], // Portfolios, Design Systems, Animations & Interactions
+    collections: [DEFAULT_COLLECTIONS[2]], // Portfolios
     description: "Design Engineer at Vercel. Crafting invisible details and high-polish user interfaces.",
     image: "https://image.thum.io/get/width/800/crop/600/https://rauno.me",
     icon: "https://unavatar.io/rauno.me?fallback=https://icons.duckduckgo.com/ip3/rauno.me.ico",
@@ -208,7 +191,7 @@ export const DEFAULT_PORTFOLIOS: PortfolioItem[] = [
     url: "https://www.realtimecolors.com",
     title: "Realtime Colors",
     domain: "realtimecolors.com",
-    collections: [DEFAULT_COLLECTIONS[7], DEFAULT_COLLECTIONS[8]], // Developer Tools, Fonts, Icons & Assets
+    collections: [DEFAULT_COLLECTIONS[7]], // Developer Tools
     description: "Visualize UI color palettes and typography in real-time on actual website layouts.",
     image: "https://image.thum.io/get/width/800/crop/600/https://www.realtimecolors.com",
     icon: "https://unavatar.io/realtimecolors.com?fallback=https://icons.duckduckgo.com/ip3/realtimecolors.com.ico",
@@ -252,48 +235,61 @@ export function guessCollections(
   tags?: string[]
 ): string[] {
   const text = `${url} ${title || ""} ${description || ""} ${(tags || []).join(" ")}`.toLowerCase();
-  const matchedNames: string[] = [];
 
+  // 1. GitHub Repos (strongest match if github link or repo)
+  if (
+    url.includes("github.com") ||
+    /\b(github|repo|repository|open source|oss|stars|gist)\b/.test(text)
+  ) {
+    return ["GitHub Repos"];
+  }
+
+  // 2. AI Tools
   if (/\b(ai|gpt|llm|copilot|openai|claude|v0|midjourney|generative|prompt)\b/.test(text)) {
-    matchedNames.push("AI Tools");
+    return ["AI Tools"];
   }
-  if (/\b(component|components|ui|shadcn|radix|tailwind|chakra|mantine|daisyui|21st\.dev)\b/.test(text)) {
-    matchedNames.push("UI & Components");
-  }
-  if (/\b(landing|saas|marketing page|homepage|conversion)\b/.test(text)) {
-    matchedNames.push("Landing Pages");
-  }
-  if (/\b(design system|styleguide|brand guideline|token|tokens)\b/.test(text)) {
-    matchedNames.push("Design Systems");
-  }
-  if (/\b(animation|animations|motion|framer|framer-motion|gsap|transitions|micro-interaction)\b/.test(text)) {
-    matchedNames.push("Animations & Interactions");
-  }
+
+  // 3. 3D & WebGL
   if (/\b(3d|webgl|three\.?js|shader|shaders|canvas|spline|physics)\b/.test(text)) {
-    matchedNames.push("3D & WebGL");
+    return ["3D & WebGL"];
   }
+
+  // 4. Fonts, Icons & Assets
   if (/\b(font|fonts|typography|type|icon|icons|svg|glyph|assets|illustrations|figma)\b/.test(text)) {
-    matchedNames.push("Fonts, Icons & Assets");
+    return ["Fonts, Icons & Assets"];
   }
+
+  // 5. UI & Components
+  if (/\b(component|components|ui|shadcn|radix|chakra|mantine|daisyui|21st\.dev)\b/.test(text)) {
+    return ["UI & Components"];
+  }
+
+  // 6. Animations & Interactions
+  if (/\b(animation|animations|motion|framer|framer-motion|gsap|transitions|micro-interaction)\b/.test(text)) {
+    return ["Animations & Interactions"];
+  }
+
+  // 7. Portfolios
+  if (
+    /\b(portfolio|portfolios|personal site|cv|resume|developer folio|designer folio)\b/.test(text) ||
+    text.includes(".me/") ||
+    text.includes("folio")
+  ) {
+    return ["Portfolios"];
+  }
+
+  // 8. Landing Pages
+  if (/\b(landing|saas|marketing page|homepage|conversion)\b/.test(text)) {
+    return ["Landing Pages"];
+  }
+
+  // 9. Developer Tools
   if (/\b(tool|tools|generator|devtools|utility|utilities|palette|regex|json|formatter|inspect|npm)\b/.test(text)) {
-    matchedNames.push("Developer Tools");
-  }
-  if (/\b(portfolio|portfolios|personal site|cv|resume|developer folio|designer folio)\b/.test(text)) {
-    matchedNames.push("Portfolios");
-  }
-  if (/\b(inspiration|showcase|gallery|experiments|award|awwwards|fwa|siteinspire|creative)\b/.test(text)) {
-    matchedNames.push("Inspiration & Experiments");
+    return ["Developer Tools"];
   }
 
-  if (matchedNames.length === 0) {
-    if (text.includes("folio") || text.includes(".me") || text.includes("personal")) {
-      matchedNames.push("Portfolios");
-    } else {
-      matchedNames.push("Inspiration & Experiments");
-    }
-  }
-
-  return matchedNames;
+  // 10. Default fallback
+  return ["Inspiration & Experiments"];
 }
 
 /**
@@ -365,6 +361,15 @@ function mapRowToItem(row: Record<string, unknown>, knownCollections: Collection
       addCollectionByName("Inspiration & Experiments");
     } else if (rawName.toLowerCase() === "inspiration") {
       addCollectionByName("Inspiration & Experiments");
+    } else if (
+      rawName.toLowerCase() === "design systems" ||
+      rc.slug === "design-systems"
+    ) {
+      if (String(row.url || "").includes("github.com")) {
+        addCollectionByName("GitHub Repos");
+      } else {
+        addCollectionByName("UI & Components");
+      }
     } else {
       const match = knownCollections.find(
         (kc) => kc.name.toLowerCase() === rawName.toLowerCase() || kc.slug === slugify(rawName)
@@ -373,8 +378,6 @@ function mapRowToItem(row: Record<string, unknown>, knownCollections: Collection
         if (!resolvedCollections.some((c) => c.name === match.name)) {
           resolvedCollections.push(match);
         }
-      } else {
-        resolvedCollections.push(rc);
       }
     }
   }
@@ -405,8 +408,8 @@ function mapRowToItem(row: Record<string, unknown>, knownCollections: Collection
     url: String(row.url || ""),
     title: String(row.title || "Untitled"),
     domain: String(row.domain || extractDomain(String(row.url || ""))),
-    collections: resolvedCollections,
-    collection_ids: resolvedCollections.map((c) => c.id),
+    collections: resolvedCollections.slice(0, 1),
+    collection_ids: resolvedCollections.slice(0, 1).map((c) => c.id),
     description: String(row.description || ""),
     image: String(row.image || ""),
     video: row.video ? String(row.video) : null,
@@ -427,7 +430,8 @@ function mapRowToItem(row: Record<string, unknown>, knownCollections: Collection
 // ============================================================================
 
 /**
- * Fetch all collections, ordered by display_order then name
+ * Fetch all collections, guaranteed to return strictly the 10 standard collections.
+ * Automatically migrates and cleans up deprecated collections like "Design Systems".
  */
 export async function fetchCollections(): Promise<Collection[]> {
   if (!isSupabaseConfigured()) {
@@ -444,45 +448,128 @@ export async function fetchCollections(): Promise<Collection[]> {
     return DEFAULT_COLLECTIONS;
   }
 
-  // Filter out removed legacy collections: "Tools & Resources", "Creative Websites"
-  // and rename "Inspiration" to "Inspiration & Experiments"
-  const result: Collection[] = [];
-  const seenSlugs = new Set<string>();
+  // Detect and migrate deprecated "Design Systems" / "Tools & Resources" / "Creative Websites" in Supabase
+  const deprecatedDesignCol = data.find(
+    (c) =>
+      String(c.name).trim().toLowerCase() === "design systems" ||
+      String(c.slug).trim().toLowerCase() === "design-systems"
+  );
 
-  for (const c of data) {
-    const rawName = String(c.name).trim();
-    if (
-      rawName.toLowerCase() === "tools & resources" ||
-      rawName.toLowerCase() === "creative websites"
-    ) {
-      continue; // Skip deprecated collection names
-    }
+  const existingGithubCol = data.find(
+    (c) =>
+      String(c.slug).trim().toLowerCase() === "github-repos" ||
+      String(c.name).trim().toLowerCase() === "github repos"
+  );
 
-    let name = rawName;
-    let slug = String(c.slug || slugify(name));
-    if (name.toLowerCase() === "inspiration") {
-      name = "Inspiration & Experiments";
-      slug = "inspiration-experiments";
-    }
+  if (deprecatedDesignCol) {
+    if (!existingGithubCol) {
+      // Migrate the row in Supabase to GitHub Repos
+      const githubStd = DEFAULT_COLLECTIONS[3]; // GitHub Repos
+      deprecatedDesignCol.name = githubStd.name;
+      deprecatedDesignCol.slug = githubStd.slug;
+      deprecatedDesignCol.description = githubStd.description;
+      deprecatedDesignCol.display_order = githubStd.display_order;
 
-    if (!seenSlugs.has(slug)) {
-      seenSlugs.add(slug);
-      result.push({
-        id: String(c.id),
-        name,
-        slug,
-        description: c.description ? String(c.description) : "",
-        display_order: typeof c.display_order === "number" ? c.display_order : 0,
-        created_at: c.created_at ? String(c.created_at) : undefined,
-        updated_at: c.updated_at ? String(c.updated_at) : undefined,
-      });
+      (async () => {
+        try {
+          await supabase
+            .from("collections")
+            .update({
+              name: githubStd.name,
+              slug: githubStd.slug,
+              description: githubStd.description,
+              display_order: githubStd.display_order,
+            })
+            .eq("id", deprecatedDesignCol.id);
+        } catch {
+          // Non-blocking
+        }
+      })();
+    } else {
+      // GitHub Repos exists: re-link any items attached to Design Systems to GitHub Repos & delete Design Systems
+      (async () => {
+        try {
+          const { data: links } = await supabase
+            .from("portfolio_collections")
+            .select("portfolio_id")
+            .eq("collection_id", deprecatedDesignCol.id);
+
+          if (links && links.length > 0) {
+            for (const l of links) {
+              await supabase
+                .from("portfolio_collections")
+                .insert({
+                  portfolio_id: l.portfolio_id,
+                  collection_id: existingGithubCol.id,
+                });
+            }
+          }
+
+          await supabase
+            .from("portfolio_collections")
+            .delete()
+            .eq("collection_id", deprecatedDesignCol.id);
+
+          await supabase
+            .from("collections")
+            .delete()
+            .eq("id", deprecatedDesignCol.id);
+        } catch {
+          // Non-blocking background migration
+        }
+      })();
     }
   }
 
-  // Ensure all 10 standard collections are present in the list
+  // Clean up any deprecated collections ("tools & resources", "creative websites") in background
+  const otherDeprecatedCols = data.filter(
+    (c) =>
+      String(c.name).trim().toLowerCase() === "tools & resources" ||
+      String(c.name).trim().toLowerCase() === "creative websites"
+  );
+  if (otherDeprecatedCols.length > 0) {
+    (async () => {
+      try {
+        for (const dc of otherDeprecatedCols) {
+          await supabase.from("portfolio_collections").delete().eq("collection_id", dc.id);
+          await supabase.from("collections").delete().eq("id", dc.id);
+        }
+      } catch {
+        // Non-blocking
+      }
+    })();
+  }
+
+  // Strictly construct the exact 10 standard collections
+  const result: Collection[] = [];
   for (const std of DEFAULT_COLLECTIONS) {
-    if (!seenSlugs.has(std.slug)) {
-      seenSlugs.add(std.slug);
+    const matched = data.find((c) => {
+      const cName = String(c.name).trim().toLowerCase();
+      const cSlug = String(c.slug).trim().toLowerCase();
+      if (cName === "design systems" || cSlug === "design-systems") return false;
+      if (cName === "tools & resources" || cName === "creative websites") return false;
+
+      if (cSlug === std.slug.toLowerCase() || cName === std.name.toLowerCase()) return true;
+      if (
+        std.slug === "inspiration-experiments" &&
+        (cName === "inspiration" || cSlug === "inspiration")
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    if (matched) {
+      result.push({
+        id: String(matched.id),
+        name: std.name,
+        slug: std.slug,
+        description: matched.description ? String(matched.description) : std.description,
+        display_order: std.display_order,
+        created_at: matched.created_at ? String(matched.created_at) : undefined,
+        updated_at: matched.updated_at ? String(matched.updated_at) : undefined,
+      });
+    } else {
       result.push(std);
     }
   }
@@ -516,12 +603,17 @@ export async function normalizeStandardCollectionsInSupabase(): Promise<{
   const colMap = new Map<string, Collection>();
   for (const std of DEFAULT_COLLECTIONS) {
     const existing = dbCols.find(
-      (c) => c.name.toLowerCase() === std.name.toLowerCase()
+      (c) =>
+        c.name.toLowerCase() === std.name.toLowerCase() ||
+        c.slug.toLowerCase() === std.slug.toLowerCase() ||
+        (std.slug === "github-repos" &&
+          (c.slug === "design-systems" || c.name.toLowerCase() === "design systems"))
     );
     if (existing) {
       await supabase
         .from("collections")
         .update({
+          name: std.name,
           slug: std.slug,
           description: std.description,
           display_order: std.display_order,
@@ -990,9 +1082,10 @@ export async function createPortfolio(
 
   const itemId = String(insertedRow?.id);
 
-  // 2. Insert into portfolio_collections junction table
-  if (collectionIds.length > 0) {
-    const junctionRows = collectionIds.map((cid) => ({
+  // 2. Insert into portfolio_collections junction table (single primary collection)
+  const primaryCollectionIds = collectionIds.slice(0, 1);
+  if (primaryCollectionIds.length > 0) {
+    const junctionRows = primaryCollectionIds.map((cid) => ({
       portfolio_id: itemId,
       collection_id: cid,
     }));
@@ -1157,9 +1250,10 @@ export async function updatePortfolio(
       // Remove previous relations
       await supabase.from("portfolio_collections").delete().eq("portfolio_id", id);
 
-      // Insert new relations
-      if (collectionIds.length > 0) {
-        const rows = collectionIds.map((cid) => ({
+      // Insert new relation (single primary collection)
+      const primaryCollectionIds = collectionIds.slice(0, 1);
+      if (primaryCollectionIds.length > 0) {
+        const rows = primaryCollectionIds.map((cid) => ({
           portfolio_id: id,
           collection_id: cid,
         }));

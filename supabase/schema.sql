@@ -135,7 +135,7 @@ VALUES
   ('c1000000-0000-0000-0000-000000000001', 'UI & Components', 'ui-components', 'Component libraries, design kits, and interactive micro-interactions.', 1),
   ('c1000000-0000-0000-0000-000000000002', 'Landing Pages', 'landing-pages', 'High-converting SaaS, marketing, and product landing pages.', 2),
   ('c1000000-0000-0000-0000-000000000003', 'Portfolios', 'portfolios', 'Personal developer, designer, and studio portfolios showcasing exceptional craft.', 3),
-  ('c1000000-0000-0000-0000-000000000004', 'Design Systems', 'design-systems', 'Comprehensive design language and documentation systems.', 4),
+  ('c1000000-0000-0000-0000-000000000004', 'GitHub Repos', 'github-repos', 'Starred open-source repositories, developer tools, libraries, and boilerplates.', 4),
   ('c1000000-0000-0000-0000-000000000005', 'Animations & Interactions', 'animations-interactions', 'Motion design, transitions, and polished interactive experiences.', 5),
   ('c1000000-0000-0000-0000-000000000006', '3D & WebGL', '3d-webgl', 'Experimental WebGL, Three.js, shaders, and immersive 3D experiences.', 6),
   ('c1000000-0000-0000-0000-000000000007', 'AI Tools', 'ai-tools', 'AI-powered creative tools, generative UI, and assistive design utilities.', 7),

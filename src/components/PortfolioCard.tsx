@@ -143,25 +143,26 @@ export function PortfolioCard({
         )}
 
         <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5 max-w-[75%] justify-end">
-          <div className="flex flex-wrap items-center justify-end gap-1">
-            {(item.collections && item.collections.length > 0
-              ? item.collections
-              : [{ id: "def", name: "Portfolios", slug: "portfolios" }]
-            ).map((c) => (
+          {(() => {
+            const primaryCol =
+              item.collections && item.collections.length > 0
+                ? item.collections[0]
+                : { id: "def", name: "Portfolios", slug: "portfolios" };
+            return (
               <span
-                key={c.id || c.slug}
+                key={primaryCol.id || primaryCol.slug}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onFilterByTag?.(c.slug || c.name);
+                  onFilterByTag?.(primaryCol.slug || primaryCol.name);
                 }}
-                title={`Filter by collection: ${c.name}`}
-                className="rounded bg-black/80 px-2 py-0.5 text-[10px] font-medium text-zinc-300 backdrop-blur-md border border-white/10 hover:border-white/30 hover:text-white transition cursor-pointer"
+                title={`Filter by collection: ${primaryCol.name}`}
+                className="rounded bg-black/80 px-2 py-0.5 text-[10px] font-medium text-zinc-300 backdrop-blur-md border border-white/10 hover:border-white/30 hover:text-white transition cursor-pointer truncate max-w-[150px]"
               >
-                {c.name}
+                {primaryCol.name}
               </span>
-            ))}
-          </div>
+            );
+          })()}
           {!isAdmin && onToggleFavorite && (
             <button
               type="button"

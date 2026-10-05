@@ -105,7 +105,7 @@ VALUES
   ('UI & Components', 'ui-components', 'Component libraries, design kits, and interactive micro-interactions.', 1),
   ('Landing Pages', 'landing-pages', 'High-converting SaaS, marketing, and product landing pages.', 2),
   ('Portfolios', 'portfolios', 'Personal developer, designer, and studio portfolios showcasing exceptional craft.', 3),
-  ('Design Systems', 'design-systems', 'Comprehensive design language and documentation systems.', 4),
+  ('GitHub Repos', 'github-repos', 'Starred open-source repositories, developer tools, libraries, and boilerplates.', 4),
   ('Animations & Interactions', 'animations-interactions', 'Motion design, transitions, and polished interactive experiences.', 5),
   ('3D & WebGL', '3d-webgl', 'Experimental WebGL, Three.js, shaders, and immersive 3D experiences.', 6),
   ('AI Tools', 'ai-tools', 'AI-powered creative tools, generative UI, and assistive design utilities.', 7),
@@ -123,7 +123,7 @@ DECLARE
   v_ui_id UUID;
   v_landing_id UUID;
   v_portfolio_id UUID;
-  v_design_sys_id UUID;
+  v_github_id UUID;
   v_anim_id UUID;
   v_webgl_id UUID;
   v_ai_id UUID;
@@ -132,11 +132,19 @@ DECLARE
   v_inspire_id UUID;
   v_deprecated_col RECORD;
 BEGIN
+  -- If old 'Design Systems' collection exists, rename it to 'GitHub Repos'
+  UPDATE public.collections
+  SET name = 'GitHub Repos',
+      slug = 'github-repos',
+      description = 'Starred open-source repositories, developer tools, libraries, and boilerplates.',
+      display_order = 4
+  WHERE name = 'Design Systems' OR slug = 'design-systems';
+
   -- Retrieve IDs of the 10 standard collections
   SELECT id INTO v_ui_id FROM public.collections WHERE name = 'UI & Components';
   SELECT id INTO v_landing_id FROM public.collections WHERE name = 'Landing Pages';
   SELECT id INTO v_portfolio_id FROM public.collections WHERE name = 'Portfolios';
-  SELECT id INTO v_design_sys_id FROM public.collections WHERE name = 'Design Systems';
+  SELECT id INTO v_github_id FROM public.collections WHERE name = 'GitHub Repos';
   SELECT id INTO v_anim_id FROM public.collections WHERE name = 'Animations & Interactions';
   SELECT id INTO v_webgl_id FROM public.collections WHERE name = '3D & WebGL';
   SELECT id INTO v_ai_id FROM public.collections WHERE name = 'AI Tools';
@@ -187,7 +195,7 @@ BEGIN
       'UI & Components',
       'Landing Pages',
       'Portfolios',
-      'Design Systems',
+      'GitHub Repos',
       'Animations & Interactions',
       '3D & WebGL',
       'AI Tools',

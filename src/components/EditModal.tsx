@@ -30,6 +30,7 @@ interface EditModalProps {
     video?: string;
     category?: string;
     guessedCollections?: string[];
+    tags?: string[];
   }>;
 }
 
@@ -74,48 +75,18 @@ export function EditModal({
       setVideoStatus("idle");
       setShowVideoTest(false);
 
-      // Determine initial collection IDs
+      // Determine single primary collection ID
       if (editingItem.collections && editingItem.collections.length > 0) {
-        const ids: string[] = [];
-        for (const ec of editingItem.collections) {
-          const match = availableCollections.find(
-            (ac) =>
-              ac.id === ec.id ||
-              (ec.slug && ac.slug === ec.slug) ||
-              (ec.name && ac.name.toLowerCase() === ec.name.toLowerCase())
-          );
-          if (match && !ids.includes(match.id)) {
-            ids.push(match.id);
-          } else if (ec.id && !ids.includes(ec.id)) {
-            ids.push(ec.id);
-          }
-        }
-        setSelectedCollectionIds(
-          ids.length > 0
-            ? ids
-            : availableCollections[0]
-            ? [availableCollections[0].id]
-            : []
+        const firstCol = editingItem.collections[0];
+        const match = availableCollections.find(
+          (ac) =>
+            ac.id === firstCol.id ||
+            (firstCol.slug && ac.slug === firstCol.slug) ||
+            (firstCol.name && ac.name.toLowerCase() === firstCol.name.toLowerCase())
         );
+        setSelectedCollectionIds(match ? [match.id] : [firstCol.id]);
       } else if (editingItem.collection_ids && editingItem.collection_ids.length > 0) {
-        const ids: string[] = [];
-        for (const cid of editingItem.collection_ids) {
-          const match = availableCollections.find(
-            (ac) => ac.id === cid || ac.slug === cid
-          );
-          if (match && !ids.includes(match.id)) {
-            ids.push(match.id);
-          } else if (!ids.includes(cid)) {
-            ids.push(cid);
-          }
-        }
-        setSelectedCollectionIds(
-          ids.length > 0
-            ? ids
-            : availableCollections[0]
-            ? [availableCollections[0].id]
-            : []
-        );
+        setSelectedCollectionIds([editingItem.collection_ids[0]]);
       } else {
         setSelectedCollectionIds(availableCollections[0] ? [availableCollections[0].id] : []);
       }
@@ -137,14 +108,8 @@ export function EditModal({
 
   if (!isOpen) return null;
 
-  const handleToggleCollection = (colId: string) => {
-    setSelectedCollectionIds((prev) => {
-      if (prev.includes(colId)) {
-        return prev.filter((id) => id !== colId);
-      } else {
-        return [...prev, colId];
-      }
-    });
+  const handleSelectCollection = (colId: string) => {
+    setSelectedCollectionIds([colId]);
   };
 
   const handleRefetch = async () => {
@@ -170,26 +135,22 @@ export function EditModal({
         setPreviewType("video");
       }
 
-      const toMatch = meta.guessedCollections && meta.guessedCollections.length > 0
-        ? meta.guessedCollections
-        : meta.category
-        ? [meta.category]
-        : [];
+      if (meta.tags && meta.tags.length > 0 && (!tags.trim() || tags.trim() === "Design")) {
+        setTags(meta.tags.join(", "));
+      }
 
-      if (toMatch.length > 0) {
-        const guessedIds: string[] = [];
-        for (const name of toMatch) {
-          const matched = availableCollections.find(
-            (c) =>
-              c.name.toLowerCase() === name.toLowerCase() ||
-              c.slug.toLowerCase() === name.toLowerCase()
-          );
-          if (matched && !guessedIds.includes(matched.id)) {
-            guessedIds.push(matched.id);
-          }
-        }
-        if (guessedIds.length > 0) {
-          setSelectedCollectionIds(guessedIds);
+      const toMatch = meta.guessedCollections && meta.guessedCollections.length > 0
+        ? meta.guessedCollections[0]
+        : meta.category || "";
+
+      if (toMatch) {
+        const matched = availableCollections.find(
+          (c) =>
+            c.name.toLowerCase() === toMatch.toLowerCase() ||
+            c.slug.toLowerCase() === toMatch.toLowerCase()
+        );
+        if (matched) {
+          setSelectedCollectionIds([matched.id]);
         }
       }
     } catch {
@@ -260,7 +221,7 @@ export function EditModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg rounded-xl border border-white/15 bg-zinc-900 p-5 shadow-2xl"
+        className="relative flex flex-col max-h-[90vh] w-full max-w-lg rounded-xl border border-white/15 bg-zinc-900 p-4 sm:p-5 shadow-2xl overflow-y-auto no-scrollbar"
       >
         <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
           <div>
@@ -268,7 +229,7 @@ export function EditModal({
               {editingItem ? "Edit Reference" : "Add Reference"}
             </h3>
             <p className="text-xs text-zinc-400">
-              Assign to one or more collections to help visitors discover this resource.
+              Assign a primary collection and tags to help visitors discover this resource.
             </p>
           </div>
           <button
@@ -329,40 +290,24 @@ export function EditModal({
             />
           </div>
 
-          {/* Collections Checkbox List */}
+          {/* Primary Collection Radio Selection */}
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <label className="font-medium text-zinc-300">
-                Collections ({selectedCollectionIds.length} selected)
+                Primary Collection
               </label>
-              <div className="flex items-center gap-2 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedCollectionIds(availableCollections.map((c) => c.id))
-                  }
-                  className="text-zinc-400 hover:text-zinc-200 transition underline underline-offset-2"
-                >
-                  Select all
-                </button>
-                <span className="text-zinc-600">•</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCollectionIds([])}
-                  className="text-zinc-400 hover:text-amber-400 transition underline underline-offset-2"
-                >
-                  Clear all
-                </button>
-              </div>
+              <span className="text-[11px] text-zinc-400">
+                1 collection per site (use Tags for details)
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-white/10 bg-zinc-950/70 p-2.5 max-h-40 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 rounded-lg border border-white/10 bg-zinc-950/70 p-2.5 max-h-48 overflow-y-auto no-scrollbar">
               {availableCollections.map((col) => {
-                const isSelected = selectedCollectionIds.includes(col.id);
+                const isSelected = selectedCollectionIds[0] === col.id;
                 return (
                   <button
                     key={col.id}
                     type="button"
-                    onClick={() => handleToggleCollection(col.id)}
+                    onClick={() => handleSelectCollection(col.id)}
                     className={`flex items-center gap-2 cursor-pointer select-none rounded-md px-2.5 py-1.5 text-left transition ${
                       isSelected
                         ? "bg-amber-500/15 text-amber-200 font-medium border border-amber-500/40 shadow-sm"
@@ -370,13 +315,13 @@ export function EditModal({
                     }`}
                   >
                     <div
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition ${
                         isSelected
                           ? "border-amber-400 bg-amber-400 text-zinc-950"
                           : "border-zinc-700 bg-zinc-900 group-hover:border-zinc-500"
                       }`}
                     >
-                      {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                      {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-zinc-950" />}
                     </div>
                     <span className="truncate text-xs">{col.name}</span>
                   </button>
@@ -385,7 +330,7 @@ export function EditModal({
             </div>
             {selectedCollectionIds.length === 0 && (
               <p className="mt-1 text-[11px] text-amber-400">
-                Please select at least one collection for this resource.
+                Please select a collection for this resource.
               </p>
             )}
           </div>
