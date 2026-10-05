@@ -65,8 +65,193 @@ export function PortfolioListItem({
           : "border-white/[0.08] bg-zinc-900/40 hover:border-white/20 hover:bg-zinc-900/70"
       } ${!item.published && isAdmin ? "opacity-75 ring-1 ring-amber-500/30" : ""}`}
     >
-      {/* Main Row */}
-      <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4">
+      {/* Mobile Layout (< sm) */}
+      <div className="flex flex-col p-3 sm:hidden">
+        {/* Top: Favicon, Title, Badges, Direct Link */}
+        <div className="flex items-start gap-2.5">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-zinc-950 p-1.5 shadow-inner">
+            <img
+              src={faviconUrl}
+              alt=""
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://icons.duckduckgo.com/ip3/${item.domain}.ico`;
+              }}
+              className="h-full w-full object-contain"
+            />
+            {item.pinned && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-zinc-950" />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <a
+                href={getSafeExternalUrl(item.url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-sm font-semibold text-zinc-100 hover:text-white"
+              >
+                {item.title}
+              </a>
+              {item.pinned && (
+                <span className="inline-flex items-center gap-0.5 rounded bg-amber-500/10 px-1.5 py-0.2 text-[9px] font-semibold text-amber-400 border border-amber-500/20">
+                  <Sparkles className="h-2 w-2 fill-current" />
+                  <span>Featured</span>
+                </span>
+              )}
+              {isAdmin && !item.published && (
+                <span className="inline-flex items-center gap-0.5 rounded bg-amber-950/80 px-1.5 py-0.2 text-[9px] font-semibold text-amber-300 border border-amber-500/30">
+                  <EyeOff className="h-2 w-2" />
+                  <span>Draft</span>
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 text-xs text-zinc-500 font-mono truncate">
+              {item.domain}
+            </div>
+          </div>
+
+          <a
+            href={getSafeExternalUrl(item.url)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open website"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-zinc-800/80 text-zinc-400 hover:text-white"
+          >
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
+        </div>
+
+        {/* Mobile Action & Collection Toolbar */}
+        <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.06] pt-2">
+          {(() => {
+            const primaryCol =
+              item.collections && item.collections.length > 0
+                ? item.collections[0]
+                : { id: "def", name: "Portfolios", slug: "portfolios" };
+            return (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFilterByTag?.(primaryCol.slug || primaryCol.name);
+                }}
+                title={`Filter by collection: ${primaryCol.name}`}
+                className="rounded bg-zinc-800/80 px-2 py-0.5 text-[10px] font-medium text-zinc-300 border border-white/10 truncate max-w-[130px]"
+              >
+                {primaryCol.name}
+              </button>
+            );
+          })()}
+
+          <div className="flex items-center gap-1">
+            {isAdmin ? (
+              <>
+                {onTogglePin && (
+                  <button
+                    type="button"
+                    onClick={() => onTogglePin(item.id)}
+                    title={item.pinned ? "Unpin featured" : "Pin as featured"}
+                    className={`rounded-lg p-1.5 transition ${
+                      item.pinned
+                        ? "text-amber-400 bg-amber-400/10"
+                        : "text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Bookmark className={`h-3.5 w-3.5 ${item.pinned ? "fill-current" : ""}`} />
+                  </button>
+                )}
+
+                {onTogglePublish && (
+                  <button
+                    type="button"
+                    onClick={() => onTogglePublish(item.id)}
+                    title={item.published ? "Set as Draft" : "Publish to Live"}
+                    className={`rounded-lg p-1.5 transition hover:bg-white/10 ${
+                      item.published ? "text-emerald-400" : "text-amber-400"
+                    }`}
+                  >
+                    {item.published ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => onCopyUrl(item.url)}
+                  title="Copy URL"
+                  className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+
+                {onOpenEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenEdit(item)}
+                    title="Edit reference"
+                    className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                )}
+
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(item)}
+                    title="Delete"
+                    className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-red-500/10 hover:text-red-400"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {onToggleFavorite && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleFavorite(item.id)}
+                    title={isFavorite ? "Remove from saved bookmarks" : "Save to bookmarks"}
+                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition ${
+                      isFavorite
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30"
+                        : "border border-white/10 bg-zinc-900/60 text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Bookmark className={`h-3 w-3 ${isFavorite ? "fill-current text-amber-400" : ""}`} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onCopyUrl(item.url)}
+                  title="Copy URL"
+                  className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              title={isExpanded ? "Collapse preview" : "Expand preview"}
+              className="rounded-lg p-1.5 text-zinc-400 transition hover:bg-white/10 hover:text-zinc-200"
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Main Row (sm+) */}
+      <div className="hidden sm:flex items-center justify-between gap-3 p-3.5 sm:p-4">
         {/* Left: Icon & Info */}
         <div className="flex items-center gap-3.5 min-w-0 flex-1">
           {/* Logo / Favicon Box */}
@@ -120,25 +305,25 @@ export function PortfolioListItem({
         <div className="flex items-center gap-3 shrink-0">
           {/* Collections / Domain Badge */}
           <div className="hidden sm:flex flex-col items-end text-right gap-1 max-w-[220px]">
-            <div className="flex flex-wrap justify-end gap-1">
-              {(item.collections && item.collections.length > 0
-                ? item.collections
-                : [{ id: "def", name: "Portfolios", slug: "portfolios" }]
-              ).map((c) => (
+            {(() => {
+              const primaryCol =
+                item.collections && item.collections.length > 0
+                  ? item.collections[0]
+                  : { id: "def", name: "Portfolios", slug: "portfolios" };
+              return (
                 <button
-                  key={c.id || c.slug}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onFilterByTag?.(c.slug || c.name);
+                    onFilterByTag?.(primaryCol.slug || primaryCol.name);
                   }}
-                  title={`Filter by collection: ${c.name}`}
-                  className="rounded bg-zinc-800/80 px-2 py-0.5 text-[11px] font-medium text-zinc-300 border border-white/10 hover:border-white/25 hover:text-white transition"
+                  title={`Filter by collection: ${primaryCol.name}`}
+                  className="rounded bg-zinc-800/80 px-2 py-0.5 text-[11px] font-medium text-zinc-300 border border-white/10 hover:border-white/25 hover:text-white transition truncate max-w-[180px]"
                 >
-                  {c.name}
+                  {primaryCol.name}
                 </button>
-              ))}
-            </div>
+              );
+            })()}
             <span className="text-[11px] font-mono text-zinc-500">
               {item.domain}
             </span>

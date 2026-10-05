@@ -51,12 +51,12 @@ export function Omnibar({ onAddUrl, onShowToast }: OmnibarProps) {
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="Paste portfolio or UI library URL..."
+          placeholder="Paste website URL..."
           required
           autoComplete="off"
           inputMode="url"
           spellCheck={false}
-          className="min-w-0 flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-500 outline-none"
+          className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 outline-none"
         />
         <div className="flex items-center gap-1.5">
           <button
@@ -66,7 +66,7 @@ export function Omnibar({ onAddUrl, onShowToast }: OmnibarProps) {
             className="inline-flex items-center gap-1 rounded bg-zinc-800/80 px-2 py-1 font-mono text-[11px] font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-200"
           >
             <Clipboard className="h-3 w-3" />
-            <span>Paste</span>
+            <span className="hidden min-[360px]:inline">Paste</span>
           </button>
           <button
             type="submit"

@@ -124,7 +124,7 @@ export function DataMigrationModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg rounded-2xl border border-white/15 bg-zinc-900 p-6 shadow-2xl"
+        className="relative flex flex-col max-h-[90vh] w-full max-w-lg rounded-2xl border border-white/15 bg-zinc-900 p-4 sm:p-6 shadow-2xl overflow-y-auto no-scrollbar"
       >
         {/* Header */}
         <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">

@@ -435,6 +435,54 @@ export function App() {
     }
   }, [adminUser, loadAdminData]);
 
+  // Helper to derive smart tags from metadata and content
+  const extractSuggestedTags = (
+    cleanUrl: string,
+    title?: string,
+    description?: string,
+    rawKeywords?: unknown
+  ): string[] => {
+    const tags = new Set<string>();
+    if (Array.isArray(rawKeywords)) {
+      for (const k of rawKeywords) {
+        if (typeof k === "string" && k.trim().length > 1 && k.trim().length < 24) {
+          tags.add(k.trim());
+        }
+      }
+    } else if (typeof rawKeywords === "string") {
+      rawKeywords.split(",").forEach((k) => {
+        const trimmed = k.trim();
+        if (trimmed.length > 1 && trimmed.length < 24) tags.add(trimmed);
+      });
+    }
+
+    const combined = `${cleanUrl} ${title || ""} ${description || ""}`.toLowerCase();
+    const techKeywords: Array<[RegExp, string]> = [
+      [/\b(react|next\.?js)\b/i, "React"],
+      [/\b(vue|nuxt)\b/i, "Vue"],
+      [/\b(tailwind|css)\b/i, "Tailwind"],
+      [/\b(three\.?js|webgl|shaders?)\b/i, "Three.js"],
+      [/\b(framer\s*motion|motion|gsap|animation)\b/i, "Motion"],
+      [/\b(github|open\s*source|repo)\b/i, "Open Source"],
+      [/\b(ai|llm|gpt|claude|generative)\b/i, "AI"],
+      [/\b(icons?|typography|fonts?)\b/i, "Typography"],
+      [/\b(ui\s*kit|components?|shadcn)\b/i, "UI Components"],
+      [/\b(saas|landing|startup)\b/i, "SaaS"],
+    ];
+
+    for (const [regex, tag] of techKeywords) {
+      if (regex.test(combined)) {
+        tags.add(tag);
+      }
+    }
+
+    if (tags.size === 0) {
+      tags.add("Design");
+    }
+
+    return Array.from(tags).slice(0, 5);
+  };
+
   // Scraper helper with timeout, SSRF protection, and graceful fallback
   const fetchMetadata = async (rawUrl: string) => {
     const validated = validateAndSanitizeUrl(rawUrl);
@@ -464,14 +512,16 @@ export function App() {
           const guessedCols = guessCollections(clean, d.title || defaultTitle, d.description);
           const detectedVideo =
             d.video?.url || (typeof d.video === "string" ? d.video : undefined);
+          const suggestedTags = extractSuggestedTags(clean, d.title, d.description, d.keywords);
 
           return {
             title: d.title || d.publisher || defaultTitle,
             description: d.description || "Curated web & UI reference.",
             image: d.image?.url || fallbackThumbnail,
             video: detectedVideo,
-            guessedCollections: guessedCols,
+            guessedCollections: guessedCols.slice(0, 1),
             category: guessedCols[0] || "Portfolios",
+            tags: suggestedTags,
           };
         }
       }
@@ -482,13 +532,15 @@ export function App() {
     }
 
     const guessedCols = guessCollections(clean, defaultTitle);
+    const suggestedTags = extractSuggestedTags(clean, defaultTitle);
     return {
       title: defaultTitle,
       description: "Curated web & UI reference.",
       image: fallbackThumbnail,
       video: undefined,
-      guessedCollections: guessedCols,
+      guessedCollections: guessedCols.slice(0, 1),
       category: guessedCols[0] || "Portfolios",
+      tags: suggestedTags,
     };
   };
 
@@ -728,14 +780,14 @@ export function App() {
             <button
               type="button"
               onClick={() => navigateTo("explore")}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 sm:px-3 py-1 text-xs font-medium transition ${
                 currentRoute === "explore" && !showSavedOnly
                   ? "bg-white text-zinc-950 font-semibold shadow-sm"
                   : "border border-white/10 bg-zinc-900/60 text-zinc-300 hover:border-white/20 hover:text-white"
               }`}
             >
               <Compass className="h-3.5 w-3.5" />
-              <span>Explore</span>
+              <span className="hidden min-[360px]:inline">Explore</span>
             </button>
 
             {/* Quick Saved Pill */}
@@ -749,7 +801,7 @@ export function App() {
                 }
               }}
               title="View your saved bookmarks"
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 sm:px-2.5 py-1 text-xs font-medium transition ${
                 currentRoute === "explore" && showSavedOnly
                   ? "bg-amber-400 text-zinc-950 font-semibold shadow-sm"
                   : "border border-white/10 bg-zinc-900/60 text-zinc-300 hover:border-white/20 hover:text-white"
@@ -783,10 +835,24 @@ export function App() {
                 onClick={() =>
                   navigateTo(currentRoute === "admin" ? "explore" : "admin")
                 }
-                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/40"
+                className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-950/40 px-2 sm:px-3 py-1 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/40 shrink-0"
               >
                 <Shield className="h-3.5 w-3.5" />
-                <span>{currentRoute === "admin" ? "Public View" : "Admin Panel"}</span>
+                <span>
+                  {currentRoute === "admin" ? (
+                    <>
+                      <span className="min-[360px]:hidden">View</span>
+                      <span className="hidden min-[360px]:inline sm:hidden">Public</span>
+                      <span className="hidden sm:inline">Public View</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="min-[360px]:hidden">Admin</span>
+                      <span className="hidden min-[360px]:inline sm:hidden">Admin</span>
+                      <span className="hidden sm:inline">Admin Panel</span>
+                    </>
+                  )}
+                </span>
               </button>
             ) : (
               <button

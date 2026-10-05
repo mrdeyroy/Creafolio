@@ -190,14 +190,14 @@ export function ManageCollectionsModal({
         className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-white/15 bg-zinc-900 shadow-2xl"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-white/10 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-800 text-amber-400">
-              <FolderKanban className="h-5 w-5" />
+        <div className="flex items-center justify-between border-b border-white/10 p-4 sm:p-5">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-800 text-amber-400 shrink-0">
+              <FolderKanban className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-white">Manage Collections</h3>
-              <p className="text-xs text-zinc-400">
+              <h3 className="text-sm sm:text-base font-semibold text-white">Manage Collections</h3>
+              <p className="text-[11px] sm:text-xs text-zinc-400">
                 Organize resources into single or multiple collections.
               </p>
             </div>
@@ -212,7 +212,7 @@ export function ManageCollectionsModal({
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 sm:space-y-5 no-scrollbar">
           {errorMsg && (
             <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
               <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" />

@@ -19,7 +19,7 @@ export function BrandLogo({ count, onClick }: { count: number; onClick?: () => v
             <path d="M14 15h5" className="logo-line logo-line-2 origin-[9px_center] transition-transform duration-300 group-hover:translate-x-[2px] group-hover:scale-x-120" />
           </svg>
         </span>
-        <span className="text-[15px] font-semibold tracking-tight text-white">Creafolio</span>
+        <span className="hidden min-[380px]:inline text-[15px] font-semibold tracking-tight text-white">Creafolio</span>
       </a>
       <span className="hidden sm:inline-block h-1 w-1 rounded-full bg-zinc-600" />
       <span className="hidden sm:inline-block font-mono text-xs text-zinc-500 whitespace-nowrap">{count} indexed</span>
