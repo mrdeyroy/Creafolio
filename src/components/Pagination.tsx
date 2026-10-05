@@ -8,6 +8,7 @@ export interface PaginationProps {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   className?: string;
+  itemLabel?: string;
 }
 
 export function Pagination({
@@ -17,6 +18,7 @@ export function Pagination({
   itemsPerPage,
   onPageChange,
   className = "",
+  itemLabel = "references",
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
@@ -47,7 +49,7 @@ export function Pagination({
       {/* Range Status */}
       <span className="font-mono text-xs text-zinc-500 order-2 sm:order-1">
         Showing <span className="text-zinc-300 font-medium">{startItem}–{endItem}</span> of{" "}
-        <span className="text-zinc-300 font-medium">{totalItems}</span> references
+        <span className="text-zinc-300 font-medium">{totalItems}</span> {itemLabel}
       </span>
 
       {/* Navigation Controls */}
