@@ -126,6 +126,12 @@ export function HeroHeader() {
         className="pointer-events-none absolute -top-10 left-1/2 -z-10 h-64 w-full max-w-2xl -translate-x-1/2 rounded-full bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent blur-3xl"
       />
 
+      {/* Dark contrast pool behind header text to maintain crisp legibility over kinetic grid */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 mx-auto max-w-2xl rounded-full bg-black/60 blur-3xl"
+      />
+
       {/* Top Status Pill - Matches Landing Page Pill Design */}
       <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/80 px-3.5 py-1.5 text-xs text-zinc-300 shadow-sm backdrop-blur-md mb-6 hover:border-white/20 transition">
         <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -137,7 +143,7 @@ export function HeroHeader() {
       </div>
 
       {/* Main Headline with Canvas Selection Box & FlipWords in Landing Page Emerald Gradient */}
-      <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2">
+      <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
         <span className="text-white font-light">The</span>
 
         {/* Interactive Canvas Selection Box */}
@@ -163,7 +169,7 @@ export function HeroHeader() {
       </h1>
 
       {/* Supporting Text matching landing page copy and typography */}
-      <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-zinc-400 leading-relaxed font-normal">
+      <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-zinc-300 leading-relaxed font-normal drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
         AI tools, UI libraries, creative websites, developer resources and
         inspiration, collected in one place.
       </p>

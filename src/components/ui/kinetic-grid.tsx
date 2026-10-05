@@ -26,9 +26,9 @@ const MAX_WARP = 24;
 const DOT_SPACING = 28;
 const LERP_SPEED = 0.08;
 
-const LINE_BASE = { r: 255, g: 255, b: 255, a: 0.13 };
-const NODE_BASE_RADIUS = 1.8;
-const NODE_ACTIVE_RADIUS = 3.2;
+const LINE_BASE = { r: 255, g: 255, b: 255, a: 0.08 };
+const NODE_BASE_RADIUS = 1.3;
+const NODE_ACTIVE_RADIUS = 2.4;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -152,15 +152,15 @@ export default function KineticGrid({
       const theme = {
         default: {
           bg: "#09090b",
-          lineActive: { r: 255, g: 255, b: 255, a: 0.75 },
-          nodeActive: { r: 255, g: 255, b: 255, a: 1.0 },
+          lineActive: { r: 255, g: 255, b: 255, a: 0.38 },
+          nodeActive: { r: 255, g: 255, b: 255, a: 0.65 },
           glow: "255,255,255",
           ripple: "255,255,255",
         },
         monochrome: {
           bg: "#000000",
-          lineActive: { r: 255, g: 255, b: 255, a: 0.9 },
-          nodeActive: { r: 255, g: 255, b: 255, a: 1.0 },
+          lineActive: { r: 255, g: 255, b: 255, a: 0.42 },
+          nodeActive: { r: 255, g: 255, b: 255, a: 0.70 },
           glow: "255,255,255",
           ripple: "255,255,255",
         },
@@ -269,7 +269,7 @@ export default function KineticGrid({
               p.y,
               glowR,
             );
-            grd.addColorStop(0, `rgba(${theme.glow},${(t * 0.3).toFixed(3)})`);
+            grd.addColorStop(0, `rgba(${theme.glow},${(t * 0.18).toFixed(3)})`);
             grd.addColorStop(1, `rgba(${theme.glow},0)`);
             ctx.beginPath();
             ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
